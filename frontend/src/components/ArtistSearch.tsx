@@ -34,7 +34,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
   };
 
   const handleNextPage = () => {
-    if (data && data.page < Math.ceil(data.total / data.itemsPerPage)) {
+    if (data && data.page < Math.ceil((data?.total ?? 0) / (data?.itemsPerPage ?? 1))) {
       onPageChange(page + 1);
     }
   };
@@ -74,11 +74,11 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
         </p>
       )}
       
-      {data && data.items.length === 0 && (
+      {data?.items?.length === 0 && (
         <p>No concerts or artists found for "{searchTerm}". Try a different search term.</p>
       )}
       
-      {data && data.items.length > 0 && (
+      {data?.items && data.items.length > 0 && (
         <div className="search-results">
           <h3>Recent Concerts</h3>
           <ul className="setlist-list">
@@ -102,17 +102,17 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
             ))}
           </ul>
           
-          {data.total > data.itemsPerPage && (
+          {(data?.total ?? 0) > (data?.itemsPerPage ?? 0) && (
             <div className="pagination">
               <button onClick={handlePrevPage} disabled={page === 1}>
                 Previous
               </button>
               <span>
-                Page {page} of {Math.ceil(data.total / data.itemsPerPage)}
+                Page {page} of {Math.ceil((data?.total ?? 0) / (data?.itemsPerPage ?? 1))}
               </span>
               <button
                 onClick={handleNextPage}
-                disabled={page >= Math.ceil(data.total / data.itemsPerPage)}
+                disabled={page >= Math.ceil((data?.total ?? 0) / (data?.itemsPerPage ?? 1))}
               >
                 Next
               </button>

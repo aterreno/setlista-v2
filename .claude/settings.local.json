@@ -18,7 +18,13 @@
       "Bash(aws s3 sync:*)",
       "Bash(find:*)",
       "Bash(cdk deploy:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(aws s3 ls:*)",
+      "Bash(npx cdk deploy:*)",
+      "Bash(aws cloudfront get-distribution:*)",
+      "Bash(npx cdk:*)",
+      "Bash(aws cloudfront create-distribution:*)",
+      "Bash(REACT_APP_API_URL=https://qtg9w3czjk.execute-api.us-east-1.amazonaws.com/prod/api npm run build)"
     ]
   },
   "enableAllProjectMcpServers": false

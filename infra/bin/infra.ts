@@ -7,7 +7,7 @@ const app = new cdk.App();
 
 new SetlistaStack(app, 'SetlistaStack', {
   env: {
-    account: '081692681549',
+    account: '836481963552',
     region: 'us-east-1',
   },
   description: 'Setlista application infrastructure',

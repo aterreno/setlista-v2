@@ -24,37 +24,8 @@ export class SetlistaStack extends cdk.Stack {
       autoDeleteObjects: true, // For dev/test environments
     });
 
-    // CloudFront distribution for the frontend
-    const distribution = new cloudfront.Distribution(this, 'Distribution', {
-      defaultBehavior: {
-        origin: new origins.S3Origin(frontendBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-        },
-      ],
-    });
-
-    // Grant CloudFront permission to access the S3 bucket
-    const bucketPolicyStatement = new iam.PolicyStatement({
-      actions: ['s3:GetObject'],
-      resources: [`${frontendBucket.bucketArn}/*`],
-      principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
-      conditions: {
-        StringEquals: {
-          'AWS:SourceArn': `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`,
-        },
-      },
-    });
-
-    frontendBucket.addToResourcePolicy(bucketPolicyStatement);
+    // CloudFront distribution for the frontend (will be created after API Gateway)
+    let distribution: cloudfront.Distribution;
 
     // Import existing secrets
     const setlistFmApiKey = secretsmanager.Secret.fromSecretNameV2(
@@ -82,7 +53,6 @@ export class SetlistaStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend')),
       environment: {
         NODE_ENV: 'production',
-        SPOTIFY_REDIRECT_URI: `https://${distribution.domainName}/auth/callback`,
       },
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
@@ -116,6 +86,56 @@ export class SetlistaStack extends cdk.Stack {
       defaultIntegration: new apigateway.LambdaIntegration(apiFunction),
       anyMethod: true,
     });
+
+    // Now create CloudFront distribution after API Gateway is defined
+    distribution = new cloudfront.Distribution(this, 'DistributionV3', {
+      comment: 'Setlista CloudFront Distribution v2',
+      defaultBehavior: {
+        origin: new origins.S3Origin(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      additionalBehaviors: {
+        '/api/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        },
+        '/auth/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        },
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+      ],
+    });
+
+    // Grant CloudFront permission to access the S3 bucket
+    const bucketPolicyStatement = new iam.PolicyStatement({
+      actions: ['s3:GetObject'],
+      resources: [`${frontendBucket.bucketArn}/*`],
+      principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
+      conditions: {
+        StringEquals: {
+          'AWS:SourceArn': `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`,
+        },
+      },
+    });
+
+    frontendBucket.addToResourcePolicy(bucketPolicyStatement);
+
+    // Update Lambda environment after distribution is created
+    apiFunction.addEnvironment('SPOTIFY_REDIRECT_URI', `https://${distribution.domainName}/auth/callback`);
 
     // Outputs
     new cdk.CfnOutput(this, 'CloudFrontURL', {
