@@ -1,0 +1,119 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Setlist } from '../types/index.ts';
+import { useAuth } from '../hooks/useAuth.ts';
+import Header from '../components/Header.tsx';
+import ArtistSearch from '../components/ArtistSearch.tsx';
+import SetlistDetail from '../components/SetlistDetail.tsx';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+const HomePage: React.FC = () => {
+  const [authState, login, logout] = useAuth();
+  const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchPage, setSearchPage] = useState(1);
+  const location = useLocation();
+
+  // Handle Spotify auth callback
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    
+    if (code && !authState.isAuthenticated) {
+      // Process auth callback
+      fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/spotify/callback?code=${code}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.access_token) {
+            login(data.access_token, data.expires_in);
+            // Clear the URL params
+            window.history.replaceState({}, document.title, '/');
+          } else {
+            console.error('No access token received from Spotify');
+          }
+        })
+        .catch((error) => {
+          console.error('Authentication error:', error);
+          // Optionally show user-friendly error message
+        });
+    }
+  }, [location, authState.isAuthenticated, login]);
+
+  const handleSelectSetlist = (setlist: Setlist) => {
+    setSelectedSetlist(setlist);
+  };
+
+  const handleBackToSearch = () => {
+    setSelectedSetlist(null);
+    // Search state is maintained in HomePage, so results will still be there
+  };
+
+  const handleHomeClick = () => {
+    setSelectedSetlist(null);
+    setSearchTerm(''); // Clear search to go back to initial state
+    setSearchPage(1);
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="app-container">
+        <Header authState={authState} onLogout={logout} onHomeClick={handleHomeClick} />
+        
+        <main className="main-content">
+          {selectedSetlist ? (
+            <SetlistDetail
+              setlistId={selectedSetlist.id}
+              authState={authState}
+              onBackToSetlists={handleBackToSearch}
+            />
+          ) : (
+            <ArtistSearch 
+              onSelectSetlist={handleSelectSetlist}
+              searchTerm={searchTerm}
+              onSearchTermChange={setSearchTerm}
+              page={searchPage}
+              onPageChange={setSearchPage}
+            />
+          )}
+        </main>
+        
+        <footer className="app-footer">
+          <p>
+            Powered by{' '}
+            <a
+              href="https://www.setlist.fm/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Setlist.fm
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://developer.spotify.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Spotify
+            </a>
+          </p>
+        </footer>
+      </div>
+    </QueryClientProvider>
+  );
+};
+
+export default HomePage;

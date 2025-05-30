@@ -1,0 +1,64 @@
+**Prompt for Claude Code 4.0:**
+
+> You are a senior full-stack software engineer. I want you to **design and implement a full-stack web application using TDD and engineering best practices**.
+>
+> ## 🔧 Functional Requirements:
+>
+> * A user searches for an artist using the [Setlist.fm API](https://www.setlist.fm/).
+> * The app displays a list of concerts and setlists.
+> * The user selects a concert and can create a **Spotify playlist** with the tracks from the setlist (via Spotify API).
+>
+> ## 💻 Tech Stack:
+>
+> * **Backend**: TypeScript **or** Python (choose based on simplicity and best ecosystem support).
+> * **Frontend**: Either **React** or **Turbo (Hotwire)** using async HTML. Keep the frontend simple.
+> * **APIs**: Setlist.fm and Spotify (OAuth flow required).
+>
+> ## ✅ Software Engineering:
+>
+> * Use **Test-Driven Development (TDD)** from the start.
+> * Target **100% test coverage** with unit, integration, and E2E tests.
+> * Code must follow **clean architecture**, SOLID principles, and be modular and maintainable.
+> * Use environment-based configuration, **no hardcoded secrets**.
+>
+> ## 🏗 Infrastructure:
+>
+> * The app must run locally with **Docker** or a Makefile script.
+> * It must also be deployable to **AWS** using **Infrastructure as Code**:
+>
+>   * Host the frontend on **S3 + CloudFront**
+>   * Use **AWS Lambda + API Gateway** for backend APIs
+>   * Use **AWS Secrets Manager or Parameter Store** for secrets
+>   * Include IAM policies and secure access configuration
+>
+> ## 🔄 DevOps & CI/CD:
+>
+> * Add **GitHub Actions workflows** for:
+>
+>   * Linting
+>   * Unit & integration tests
+>   * Build and deploy infrastructure and code to AWS
+>   * Use OIDC (no static AWS credentials in CI)
+>
+> ## 📈 Monitoring & Security:
+>
+> * Use **structured logging**
+> * Push logs to **AWS CloudWatch**
+> * Basic **alerts** or error monitoring
+> * Apply **OWASP top 10** security best practices
+> * Use **HTTPS** and **secure OAuth flows**
+>
+> ## 💸 Cost Optimization:
+>
+> * Design the system to be **cheap to run in AWS**:
+>
+>   * Serverless (Lambda, S3, CloudFront)
+>   * No persistent compute resources unless needed
+>
+> ## 📦 Deliverables:
+>
+> * Complete backend and frontend code
+> * Full test suite with mocks for external APIs
+> * Infrastructure as Code (CDK or Terraform)
+> * GitHub Actions workflows
+> * README with local + production setup and deployment instructions

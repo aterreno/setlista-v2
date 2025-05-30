@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:api.setlist.fm)",
+      "Bash(npm test:*)",
+      "Bash(npm run lint)",
+      "Bash(make test:*)",
+      "Bash(aws secretsmanager create-secret:*)",
+      "Bash(npm install:*)",
+      "Bash(JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 npx cdk deploy --require-approval never)",
+      "Bash(aws s3 sync:*)",
+      "Bash(find:*)",
+      "Bash(cdk deploy:*)",
+      "Bash(cp:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}

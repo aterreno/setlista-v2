@@ -1,0 +1,92 @@
+# Setlista
+
+A full-stack web application that allows users to search for artists on Setlist.fm, view their recent concerts, and create Spotify playlists from setlists.
+
+## Features
+
+- Search for artists using Setlist.fm API
+- View recent concerts and setlists
+- Create Spotify playlists from setlists with a single click
+- Secure authentication with Spotify OAuth
+
+## Tech Stack
+
+- **Backend**: TypeScript, Node.js, Express
+- **Frontend**: React, TypeScript
+- **Infrastructure**: AWS CDK (CloudFront, S3, Lambda, API Gateway)
+- **Testing**: Jest, React Testing Library, Cypress
+- **CI/CD**: GitHub Actions
+
+## Local Development
+
+### Prerequisites
+
+- Node.js (v18+)
+- Docker
+- AWS CLI (for deployment)
+- Setlist.fm API key
+- Spotify Developer account
+
+### Setup
+
+1. Clone the repository
+2. Create a `.env` file in both the `backend` and `frontend` directories (see `.env.example`)
+3. Run `make setup` to install dependencies
+
+### Running locally
+
+```bash
+# Start the full stack locally
+make dev
+
+# Run backend only
+make backend
+
+# Run frontend only
+make frontend
+```
+
+### Testing
+
+```bash
+# Run all tests
+make test
+
+# Run backend tests
+make test-backend
+
+# Run frontend tests
+make test-frontend
+
+# Run E2E tests
+make test-e2e
+```
+
+## Deployment
+
+### Prerequisites
+
+- AWS account
+- GitHub repository with OIDC configured for AWS
+
+### Deploying to AWS
+
+The application is automatically deployed to AWS when changes are pushed to the main branch, using GitHub Actions.
+
+For manual deployment:
+
+```bash
+make deploy
+```
+
+## Architecture
+
+The application follows clean architecture principles:
+
+- **Frontend**: React application hosted on S3 + CloudFront
+- **Backend**: Node.js APIs deployed as Lambda functions behind API Gateway
+- **Security**: Secrets stored in AWS Secrets Manager, HTTPS enforced, OAuth for authentication
+
+## License
+
+MIT

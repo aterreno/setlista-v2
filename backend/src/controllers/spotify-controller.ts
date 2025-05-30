@@ -1,0 +1,82 @@
+import { Request, Response } from 'express';
+import { SpotifyService } from '../domain/services/spotify-service';
+import { SetlistService } from '../domain/services/setlist-service';
+import logger from '../utils/logger';
+
+export class SpotifyController {
+  constructor(
+    private readonly spotifyService: SpotifyService,
+    private readonly setlistService: SetlistService
+  ) {}
+
+  getAuthUrl = (_req: Request, res: Response): void => {
+    try {
+      const authUrl = this.spotifyService.getAuthorizationUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      logger.error('Error in getAuthUrl controller', { error });
+      res.status(500).json({ error: 'Failed to get Spotify authorization URL' });
+    }
+  };
+
+  handleCallback = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { code } = req.query;
+
+      if (!code || typeof code !== 'string') {
+        res.status(400).json({ error: 'Authorization code is required' });
+        return;
+      }
+
+      const tokenData = await this.spotifyService.getAccessToken(code);
+      
+      // In a real application, you would store these tokens securely
+      // For this demo, we'll send them back to the client
+      res.json({
+        access_token: tokenData.access_token,
+        expires_in: tokenData.expires_in,
+      });
+    } catch (error) {
+      logger.error('Error in handleCallback controller', { error });
+      res.status(500).json({ error: 'Failed to handle Spotify callback' });
+    }
+  };
+
+  createPlaylist = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { setlistId } = req.params;
+      const { access_token } = req.body;
+
+      if (!setlistId) {
+        res.status(400).json({ error: 'Setlist ID is required' });
+        return;
+      }
+
+      if (!access_token) {
+        res.status(400).json({ error: 'Spotify access token is required' });
+        return;
+      }
+
+      const setlist = await this.setlistService.getSetlistById(setlistId);
+      const songs = this.setlistService.extractSongsFromSetlist(setlist);
+
+      if (songs.length === 0) {
+        res.status(404).json({ error: 'No songs found in setlist' });
+        return;
+      }
+
+      const playlist = await this.spotifyService.createPlaylistFromSongs(
+        songs,
+        setlist.artist.name,
+        setlist.eventDate,
+        setlist.venue.name,
+        access_token
+      );
+
+      res.json({ playlist });
+    } catch (error) {
+      logger.error('Error in createPlaylist controller', { error });
+      res.status(500).json({ error: 'Failed to create Spotify playlist' });
+    }
+  };
+}
