@@ -50,20 +50,27 @@ jobs:
     - name: Install AWS CDK
       run: npm install -g aws-cdk
     
-    - name: Clear CDK cache
+    - name: Clear CDK cache and outputs
       working-directory: ./infra
       run: |
+        rm -rf cdk.out
         rm -f cdk.context.json
+        rm -f cdk-outputs.json
         cdk context --clear
     
-    - name: Bootstrap CDK (if needed)
+    - name: Bootstrap CDK (force)
       working-directory: ./infra
-      run: cdk bootstrap aws://836481963552/us-east-1 --require-approval never
+      run: cdk bootstrap aws://836481963552/us-east-1 --require-approval never --force
+      env:
+        CDK_DEFAULT_ACCOUNT: 836481963552
+        CDK_DEFAULT_REGION: us-east-1
     
     - name: Deploy infrastructure and backend
       working-directory: ./infra
       run: cdk deploy --require-approval never
       env:
+        CDK_DEFAULT_ACCOUNT: 836481963552
+        CDK_DEFAULT_REGION: us-east-1
         SETLIST_FM_API_KEY: ${{ secrets.SETLIST_FM_API_KEY }}
         SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
         SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}

@@ -1,9 +1,0 @@
-{
-  "SetlistaStack": {
-    "CloudFrontURL": "https://d1d12i04eqyg3q.cloudfront.net",
-    "ApiURL": "https://qtg9w3czjk.execute-api.us-east-1.amazonaws.com/prod/",
-    "SetlistaApiEndpoint39992981": "https://qtg9w3czjk.execute-api.us-east-1.amazonaws.com/prod/",
-    "FrontendBucketName": "setlistastack-frontendbucketefe2e19c-xrgiygoshsb9",
-    "CloudFrontDistributionId": "E1XZRLLA2F2T6R"
-  }
-}
