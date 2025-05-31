@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AuthState } from '../types/index.ts';
 
 const TOKEN_STORAGE_KEY = 'spotify_auth';
@@ -31,7 +31,7 @@ export const useAuth = (): [
     }
   }, []);
 
-  const login = (token: string, expiresIn: number) => {
+  const login = useCallback((token: string, expiresIn: number) => {
     const expiresAt = Date.now() + expiresIn * 1000;
     
     const newAuthState: AuthState = {
@@ -43,9 +43,9 @@ export const useAuth = (): [
     // Save to state and localStorage
     setAuthState(newAuthState);
     localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(newAuthState));
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // Clear auth state
     setAuthState({
       isAuthenticated: false,
@@ -55,7 +55,7 @@ export const useAuth = (): [
     
     // Remove from localStorage
     localStorage.removeItem(TOKEN_STORAGE_KEY);
-  };
+  }, []);
 
   return [authState, login, logout];
 };

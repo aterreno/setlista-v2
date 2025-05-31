@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Artist, SearchResult, Setlist, SpotifyPlaylist } from '../types/index.ts';
+import { Artist, SearchResult, Setlist, SpotifyPlaylist, SetlistWithSongs, HttpError } from '../types/index.ts';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -26,9 +26,10 @@ api.interceptors.request.use(
 // Response interceptor for better error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
+  (error: unknown) => {
+    const httpError = error as HttpError;
+    console.error('API Error:', httpError.response?.data || httpError.message);
+    return Promise.reject(httpError);
   }
 );
 
@@ -55,7 +56,7 @@ export const getArtistSetlists = async (artistId: string, page = 1): Promise<Sea
   return response.data;
 };
 
-export const getSetlistById = async (setlistId: string): Promise<{ setlist: Setlist; songs: any[] }> => {
+export const getSetlistById = async (setlistId: string): Promise<SetlistWithSongs> => {
   const response = await api.get(`/setlists/${setlistId}`);
   return response.data;
 };

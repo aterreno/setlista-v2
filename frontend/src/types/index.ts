@@ -28,6 +28,11 @@ export interface Song {
   };
 }
 
+export interface SetlistWithSongs {
+  setlist: Setlist;
+  songs: Song[];
+}
+
 export interface SetlistSet {
   name?: string;
   encore?: number;
@@ -69,4 +74,23 @@ export interface AuthState {
   isAuthenticated: boolean;
   accessToken: string | null;
   expiresAt: number | null;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+}
+
+export interface ApiError {
+  message: string;
+  code: string;
+  statusCode: number;
+}
+
+export interface HttpError extends Error {
+  response?: {
+    status: number;
+    data: unknown;
+  };
 }

@@ -16,7 +16,6 @@ export const createRoutes = (
   router.use('/artists', createArtistRoutes(artistController));
   router.use('/setlists', createSetlistRoutes(setlistController));
   router.use('/spotify', createSpotifyRoutes(spotifyController));
-  router.use('/auth', createSpotifyRoutes(spotifyController));
 
   return router;
 };

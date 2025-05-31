@@ -92,23 +92,7 @@ const HomePage: React.FC = () => {
         </main>
         
         <footer className="app-footer">
-          <p>
-            Powered by{' '}
-            <a
-              href="https://www.setlist.fm/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Setlist.fm
-            </a>{' '}
-            and{' '}
-            <a
-              href="https://developer.spotify.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Spotify
-            </a>
+          <p>                        
           </p>
         </footer>
       </div>

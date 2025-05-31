@@ -131,6 +131,16 @@ h1, h2, h3, h4 {
   background-clip: text;
 }
 
+.app-logo {
+  transition: var(--transition);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.app-logo:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
 .tagline {
   font-size: 1rem;
   opacity: 0.9;
@@ -376,6 +386,10 @@ h1, h2, h3, h4 {
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+}
+
+.setlist-item.clickable {
+  cursor: pointer;
 }
 
 .setlist-item::before {

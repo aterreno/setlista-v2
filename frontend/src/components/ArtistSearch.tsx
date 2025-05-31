@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { searchSetlists } from '../services/api.ts';
 import { Setlist } from '../types/index.ts';
 import { formatDate } from '../utils/formatters.ts';
+import { useDebounce } from '../hooks/useDebounce.ts';
 
 interface ArtistSearchProps {
   onSelectSetlist: (setlist: Setlist) => void;
@@ -19,12 +20,14 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
   page, 
   onPageChange 
 }) => {
+  // Debounce search term with 1.5 second delay to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 1500);
 
   const { data, isLoading, error } = useQuery(
-    ['setlist-search', searchTerm, page],
-    () => searchSetlists(searchTerm, page),
+    ['setlist-search', debouncedSearchTerm, page],
+    () => searchSetlists(debouncedSearchTerm, page),
     {
-      enabled: searchTerm.length > 0,
+      enabled: debouncedSearchTerm.length > 2, // Only search when at least 3 characters
     }
   );
 
@@ -57,7 +60,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
           type="text"
           value={searchTerm}
           onChange={handleSearchTermChange}
-          placeholder="Enter artist name, venue, or city..."
+          placeholder="Enter artist name (e.g., Radiohead, Taylor Swift)..."
           aria-label="Search query"
         />
       </div>
@@ -74,8 +77,14 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
         </p>
       )}
       
-      {data?.items?.length === 0 && (
-        <p>No concerts or artists found for "{searchTerm}". Try a different search term.</p>
+      {searchTerm.length > 0 && searchTerm.length <= 2 && (
+        <p className="search-hint">
+          Type at least 3 characters to search...
+        </p>
+      )}
+      
+      {debouncedSearchTerm.length > 2 && data?.items?.length === 0 && (
+        <p>No concerts or artists found for "{debouncedSearchTerm}". Try a different search term.</p>
       )}
       
       {data?.items && data.items.length > 0 && (
@@ -83,7 +92,14 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
           <h3>Recent Concerts</h3>
           <ul className="setlist-list">
             {(data.items as Setlist[]).map((setlist) => (
-              <li key={setlist.id} className="setlist-item">
+              <li 
+                key={setlist.id} 
+                className="setlist-item clickable"
+                onClick={() => onSelectSetlist(setlist)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onSelectSetlist(setlist)}
+              >
                 <div className="setlist-info">
                   <h4>{setlist.artist.name}</h4>
                   <p className="date">{formatDate(setlist.eventDate)}</p>
@@ -92,12 +108,6 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
                   </p>
                   {setlist.tour && <p className="tour">Tour: {setlist.tour.name}</p>}
                 </div>
-                <button 
-                  onClick={() => onSelectSetlist(setlist)}
-                  className="setlist-button"
-                >
-                  View Setlist
-                </button>
               </li>
             ))}
           </ul>

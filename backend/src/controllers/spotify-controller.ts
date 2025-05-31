@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SpotifyService } from '../domain/services/spotify-service';
 import { SetlistService } from '../domain/services/setlist-service';
+import { HttpError } from '../domain/types';
 import logger from '../utils/logger';
 
 export class SpotifyController {
@@ -13,8 +14,9 @@ export class SpotifyController {
     try {
       const authUrl = this.spotifyService.getAuthorizationUrl();
       res.json({ authUrl });
-    } catch (error) {
-      logger.error('Error in getAuthUrl controller', { error });
+    } catch (error: unknown) {
+      const httpError = error as HttpError;
+      logger.error('Error in getAuthUrl controller', { error: httpError });
       res.status(500).json({ error: 'Failed to get Spotify authorization URL' });
     }
   };
@@ -36,8 +38,9 @@ export class SpotifyController {
         access_token: tokenData.access_token,
         expires_in: tokenData.expires_in,
       });
-    } catch (error) {
-      logger.error('Error in handleCallback controller', { error });
+    } catch (error: unknown) {
+      const httpError = error as HttpError;
+      logger.error('Error in handleCallback controller', { error: httpError });
       res.status(500).json({ error: 'Failed to handle Spotify callback' });
     }
   };
@@ -74,8 +77,9 @@ export class SpotifyController {
       );
 
       res.json({ playlist });
-    } catch (error) {
-      logger.error('Error in createPlaylist controller', { error });
+    } catch (error: unknown) {
+      const httpError = error as HttpError;
+      logger.error('Error in createPlaylist controller', { error: httpError });
       res.status(500).json({ error: 'Failed to create Spotify playlist' });
     }
   };

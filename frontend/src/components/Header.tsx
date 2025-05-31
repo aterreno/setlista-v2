@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from 'react-query';
 import { getSpotifyAuthUrl } from '../services/api.ts';
 import { AuthState } from '../types/index.ts';
+import logo from '../assets/logo.svg';
 
 interface HeaderProps {
   authState: AuthState;
@@ -10,16 +11,27 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ authState, onLogout, onHomeClick }) => {
-  const { data } = useQuery('spotifyAuthUrl', getSpotifyAuthUrl, {
+  const { data, isLoading, error } = useQuery('spotifyAuthUrl', getSpotifyAuthUrl, {
     enabled: !authState.isAuthenticated,
     staleTime: Infinity,
   });
 
+  // Debug logging
+  console.log('Header render - authState:', authState);
+  console.log('Header render - useQuery data:', data);
+  console.log('Header render - useQuery isLoading:', isLoading);
+  console.log('Header render - useQuery error:', error);
+
   return (
     <header className="app-header">
       <div className="app-title">
-        <h1 onClick={onHomeClick} style={{ cursor: 'pointer' }}>Setlista</h1>
-        <p className="tagline">Create Spotify playlists from concert setlists</p>
+        <img 
+          src={logo} 
+          alt="Setlista - Concert setlists to Spotify playlists" 
+          onClick={onHomeClick} 
+          style={{ cursor: 'pointer', height: '50px', width: 'auto' }}
+          className="app-logo"
+        />
       </div>
       
       <div className="auth-section">

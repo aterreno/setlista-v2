@@ -24,7 +24,11 @@
       "Bash(aws cloudfront get-distribution:*)",
       "Bash(npx cdk:*)",
       "Bash(aws cloudfront create-distribution:*)",
-      "Bash(REACT_APP_API_URL=https://qtg9w3czjk.execute-api.us-east-1.amazonaws.com/prod/api npm run build)"
+      "Bash(REACT_APP_API_URL=https://qtg9w3czjk.execute-api.us-east-1.amazonaws.com/prod/api npm run build)",
+      "Bash(act:*)",
+      "Bash(true)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": false

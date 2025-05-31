@@ -59,14 +59,14 @@ describe('ArtistSearch', () => {
     renderArtistSearch();
     
     expect(screen.getByText('Search for Concerts')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter artist name, venue, or city...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter artist name (e.g., Radiohead, Taylor Swift)...')).toBeInTheDocument();
     expect(screen.getByText('Search by artist name to find their recent concerts')).toBeInTheDocument();
   });
 
   it('displays search term from props', () => {
     renderArtistSearch({ searchTerm: 'radiohead' });
     
-    const input = screen.getByPlaceholderText('Enter artist name, venue, or city...');
+    const input = screen.getByPlaceholderText('Enter artist name (e.g., Radiohead, Taylor Swift)...');
     expect(input).toHaveValue('radiohead');
   });
 
@@ -74,7 +74,7 @@ describe('ArtistSearch', () => {
     const onSearchTermChange = jest.fn();
     renderArtistSearch({ onSearchTermChange });
     
-    const input = screen.getByPlaceholderText('Enter artist name, venue, or city...');
+    const input = screen.getByPlaceholderText('Enter artist name (e.g., Radiohead, Taylor Swift)...');
     fireEvent.change(input, { target: { value: 'new search' } });
     
     expect(onSearchTermChange).toHaveBeenCalledWith('new search');
@@ -84,14 +84,14 @@ describe('ArtistSearch', () => {
     const onPageChange = jest.fn();
     renderArtistSearch({ onPageChange, page: 3 });
     
-    const input = screen.getByPlaceholderText('Enter artist name, venue, or city...');
+    const input = screen.getByPlaceholderText('Enter artist name (e.g., Radiohead, Taylor Swift)...');
     fireEvent.change(input, { target: { value: 'new search' } });
     
     expect(onPageChange).toHaveBeenCalledWith(1);
   });
 
-  it('does not trigger search when searchTerm is empty', () => {
-    renderArtistSearch({ searchTerm: '' });
+  it('does not trigger search when searchTerm is too short', () => {
+    renderArtistSearch({ searchTerm: 'ab' });
     
     expect(mockedApi.searchSetlists).not.toHaveBeenCalled();
   });
@@ -166,7 +166,7 @@ describe('ArtistSearch', () => {
     renderArtistSearch({ searchTerm: 'unknownartist' });
     
     await waitFor(() => {
-      expect(screen.getByText('No concerts or artists found for "unknownartist". Try a different search term.')).toBeInTheDocument();
+      expect(screen.getByText(/No concerts or artists found for.*Try a different search term/)).toBeInTheDocument();
     });
   });
 
@@ -239,11 +239,11 @@ describe('ArtistSearch', () => {
     renderArtistSearch({ searchTerm: 'radiohead', onSelectSetlist });
     
     await waitFor(() => {
-      expect(screen.getByText('View Setlist')).toBeInTheDocument();
+      expect(screen.getByText('Click to view →')).toBeInTheDocument();
     });
     
-    const viewButton = screen.getByText('View Setlist');
-    fireEvent.click(viewButton);
+    const clickableItem = screen.getByRole('button');
+    fireEvent.click(clickableItem);
     
     expect(onSelectSetlist).toHaveBeenCalledWith(mockData.items[0]);
   });

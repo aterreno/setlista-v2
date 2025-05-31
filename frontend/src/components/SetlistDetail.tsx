@@ -54,7 +54,7 @@ const SetlistDetail: React.FC<SetlistDetailProps> = ({
     const { sets } = setlist;
     
     if (!sets || !sets.set || sets.set.length === 0) {
-      return <p>No setlist information available.</p>;
+      return <p>No songs were added to this setlist yet. Check back later or view on Setlist.fm for updates.</p>;
     }
 
     return (
@@ -66,7 +66,11 @@ const SetlistDetail: React.FC<SetlistDetailProps> = ({
 
           const title = set.name || (set.encore ? `Encore ${set.encore}` : index === 0 ? 'Main Set' : `Set ${index + 1}`);
           
-          return renderSongList(set.song, title, !!set.encore);
+          return (
+            <div key={index}>
+              {renderSongList(set.song, title, !!set.encore)}
+            </div>
+          );
         })}
       </div>
     );
@@ -81,7 +85,7 @@ const SetlistDetail: React.FC<SetlistDetailProps> = ({
       <div className="setlist-detail error">
         <p className="error-message">Error loading setlist details.</p>
         <button onClick={onBackToSetlists} className="back-button">
-          Back to Setlists
+          Back to Results
         </button>
       </div>
     );
@@ -92,7 +96,7 @@ const SetlistDetail: React.FC<SetlistDetailProps> = ({
   return (
     <div className="setlist-detail">
       <button onClick={onBackToSetlists} className="back-button">
-        ← Back to Setlists
+        ← Back to Results
       </button>
       
       <div className="setlist-header">

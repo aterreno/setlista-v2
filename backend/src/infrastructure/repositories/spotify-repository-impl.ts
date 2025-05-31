@@ -49,6 +49,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
           'Content-Type': 'application/x-www-form-urlencoded',
           Authorization: `Basic ${auth}`,
         },
+        timeout: 30000,
       });
 
       return {
@@ -72,6 +73,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        timeout: 30000,
       });
 
       return {
@@ -96,6 +98,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
           type: 'track',
           limit: 5,
         },
+        timeout: 30000,
       });
 
       return response.data.tracks.items;
@@ -124,6 +127,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000,
         }
       );
 
@@ -150,6 +154,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000,
         }
       );
     } catch (error) {

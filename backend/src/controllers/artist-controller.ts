@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ArtistService } from '../domain/services/artist-service';
+import { HttpError } from '../domain/types';
 import logger from '../utils/logger';
 
 export class ArtistController {
@@ -23,12 +24,13 @@ export class ArtistController {
 
       const result = await this.artistService.searchArtists(name, page);
       res.json(result);
-    } catch (error: any) {
-      logger.error('Error in searchArtists controller', { error });
+    } catch (error: unknown) {
+      const httpError = error as HttpError;
+      logger.error('Error in searchArtists controller', { error: httpError });
       
-      if (error.response?.status === 404) {
+      if (httpError.response?.status === 404) {
         res.status(404).json({ error: 'No artists found' });
-      } else if (error.response?.status === 400) {
+      } else if (httpError.response?.status === 400) {
         res.status(400).json({ error: 'Invalid search parameters' });
       } else {
         res.status(500).json({ error: 'Failed to search for artists' });

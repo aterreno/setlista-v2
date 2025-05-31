@@ -25,10 +25,49 @@ export class SpotifyService {
   }
 
   async searchTrackForSong(song: Song, artist: string, accessToken: string): Promise<SpotifyTrack | null> {
-    const query = `track:${song.name} artist:${artist}`;
-    const tracks = await this.spotifyRepository.searchTracks(query, accessToken);
+    const maxRetries = 3;
+    const retryDelay = 1000;
 
-    return tracks.length > 0 ? tracks[0] : null;
+    const searchWithRetry = async (query: string): Promise<SpotifyTrack[]> => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          return await this.spotifyRepository.searchTracks(query, accessToken);
+        } catch (error: any) {
+          if (attempt === maxRetries || !error.code || error.code !== 'ETIMEDOUT') {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        }
+      }
+      return [];
+    };
+
+    try {
+      // First try: search with both track name and artist
+      let query = `track:${song.name} artist:${artist}`;
+      let tracks = await searchWithRetry(query);
+
+      if (tracks.length > 0) {
+        return tracks[0];
+      }
+
+      // Second try: search for covers by the performing artist (for covers)
+      if (song.cover) {
+        query = `track:${song.name} artist:${artist}`;
+        tracks = await searchWithRetry(query);
+        if (tracks.length > 0) {
+          return tracks[0];
+        }
+      }
+
+      // Third try: search just by track name (fallback for covers or obscure songs)
+      query = `track:${song.name}`;
+      tracks = await searchWithRetry(query);
+
+      return tracks.length > 0 ? tracks[0] : null;
+    } catch (error) {
+      return null;
+    }
   }
 
   async createPlaylistFromSongs(
@@ -50,12 +89,24 @@ export class SpotifyService {
       accessToken
     );
 
-    // Search for each song on Spotify
-    const trackPromises = songs.map((song) => 
-      this.searchTrackForSong(song, artistName, accessToken)
-    );
+    // Search for each song on Spotify with concurrency limit
+    const batchSize = 5;
+    const tracks: (SpotifyTrack | null)[] = [];
     
-    const tracks = await Promise.all(trackPromises);
+    for (let i = 0; i < songs.length; i += batchSize) {
+      const batch = songs.slice(i, i + batchSize);
+      const batchPromises = batch.map((song) => 
+        this.searchTrackForSong(song, artistName, accessToken)
+      );
+      
+      const batchResults = await Promise.all(batchPromises);
+      tracks.push(...batchResults);
+      
+      // Add delay between batches to avoid rate limiting
+      if (i + batchSize < songs.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
     
     // Filter out null results and get track URIs
     const trackUris = tracks
