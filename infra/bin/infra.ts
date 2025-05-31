@@ -5,7 +5,7 @@ import { SetlistaStack } from '../lib/setlista-stack';
 
 const app = new cdk.App();
 
-new SetlistaStack(app, 'SetlistaStack', {
+new SetlistaStack(app, 'SetlistaStackV2', {
   env: {
     account: '836481963552',
     region: 'us-east-1',
