@@ -20,8 +20,8 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
   page, 
   onPageChange 
 }) => {
-  // Debounce search term with 1.5 second delay to avoid excessive API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 1500);
+  // Debounce search term with 500ms delay to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const { data, isLoading, error } = useQuery(
     ['setlist-search', debouncedSearchTerm, page],
