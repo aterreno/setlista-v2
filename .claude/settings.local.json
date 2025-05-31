@@ -28,7 +28,11 @@
       "Bash(act:*)",
       "Bash(true)",
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm audit fix:*)",
+      "Bash(npm view:*)",
+      "Bash(npm audit:*)",
+      "Bash(make:*)"
     ]
   },
   "enableAllProjectMcpServers": false

@@ -1,11 +1,2 @@
-- fix the github actions which never worked
-- do a swipe of 'idiomatic typescript/ clean code'
-- fix the issue when song not found on spotify because of cover => search as second chance only by title
-- introduce delay in calling the api, like 1-2 seconds to avoid too many calls to the lambda
-- UX: instead of button 'view setlist' make the user click in the whole block to see the setlist
-- Rename: instead of back to setlist - back to results
-- UX: instead of Songs (0) No setlist information available. - let's use a more friendly message - no songs where added on setlist as of now
-- Can we search instagram for pictures of the gig? 
-- Can claude create a simple set of favicons to avoid 404s
-- search by city doesn't work, not sure if worth, perhaps change messaging just artist name
-- can claude or chatgpt generate a logo for this thing?
+- Dependabot version updates
+Allow Dependabot to open pull requests automatically to keep your dependencies up-to-date when new versions are available. Learn more about configuring a dependabot.yml file.
