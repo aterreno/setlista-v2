@@ -1,4 +1,4 @@
-.PHONY: setup dev backend frontend test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean
+.PHONY: setup dev backend frontend test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean check-deps update-deps audit
 
 setup:
 	@echo "Setting up project dependencies..."
@@ -64,3 +64,21 @@ clean:
 	rm -rf backend/dist
 	rm -rf frontend/build
 	rm -rf infra/cdk.out
+
+check-deps:
+	@echo "Checking dependencies..."
+	./scripts/check-dependencies.sh
+
+update-deps:
+	@echo "Updating minor/patch dependencies..."
+	cd backend && ncu --target minor -u && npm install
+	cd frontend && ncu --target minor -u && npm install
+	cd infra && ncu --target minor -u && npm install
+	@echo "Running tests after updates..."
+	make test
+
+audit:
+	@echo "Running security audit..."
+	cd backend && npm audit
+	cd frontend && npm audit 
+	cd infra && npm audit

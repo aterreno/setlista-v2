@@ -16,6 +16,20 @@ updates:
     commit-message:
       prefix: "backend"
       include: "scope"
+    # Group minor and patch updates
+    groups:
+      aws-sdk:
+        patterns:
+          - "@aws-sdk/*"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+      testing:
+        patterns:
+          - "@types/*"
+          - "jest"
+          - "supertest"
+          - "ts-jest"
 
   # Frontend Node.js dependencies  
   - package-ecosystem: "npm"
@@ -33,6 +47,22 @@ updates:
     commit-message:
       prefix: "frontend"
       include: "scope"
+    # Group related updates
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      testing-library:
+        patterns:
+          - "@testing-library/*"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+      eslint:
+        patterns:
+          - "eslint*"
 
   # Infrastructure Node.js dependencies
   - package-ecosystem: "npm"
@@ -50,6 +80,15 @@ updates:
     commit-message:
       prefix: "infra"
       include: "scope"
+    # Group CDK and AWS related updates
+    groups:
+      aws-cdk:
+        patterns:
+          - "aws-cdk*"
+          - "constructs"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"

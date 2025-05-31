@@ -26,5 +26,9 @@
   "homepage": "https://github.com/aterreno/setlista-v2#readme",
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "engines": {
+    "node": ">=18.20.5",
+    "npm": ">=10.9.2"
   }
 }

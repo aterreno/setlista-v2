@@ -30,8 +30,30 @@ A full-stack web application that allows users to search for artists on Setlist.
 ### Setup
 
 1. Clone the repository
-2. Create a `.env` file in both the `backend` and `frontend` directories (see `.env.example`)
-3. Run `make setup` to install dependencies
+2. **Install correct Node.js version**:
+   
+   **Option A: Using asdf (recommended)**
+   ```bash
+   # Install asdf plugins (if not already installed)
+   asdf plugin add nodejs
+   asdf plugin add npm
+   
+   # Install and use the project's defined versions
+   asdf install
+   ```
+   
+   **Option B: Using nvm**
+   ```bash
+   # Install and use the Node.js version specified in .nvmrc
+   nvm install
+   nvm use
+   ```
+   
+   **Option C: Manual installation**
+   - Install Node.js 18.20.5 and npm 10.9.2+ manually
+
+3. Create a `.env` file in both the `backend` and `frontend` directories (see `.env.example`)
+4. Run `make setup` to install dependencies
 
 ### Running locally
 
