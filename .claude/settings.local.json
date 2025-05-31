@@ -32,7 +32,9 @@
       "Bash(npm audit fix:*)",
       "Bash(npm view:*)",
       "Bash(npm audit:*)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "Bash(grep:*)",
+      "Bash(aws:*)"
     ]
   },
   "enableAllProjectMcpServers": false

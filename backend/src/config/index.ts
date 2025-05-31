@@ -16,7 +16,7 @@ async function getSecret(secretName: string): Promise<string> {
   try {
     const command = new GetSecretValueCommand({ SecretId: secretName });
     const response = await secretsClient.send(command);
-    return response.SecretString || '';
+    return response?.SecretString || '';
   } catch (error) {
     console.error(`Error retrieving secret ${secretName}:`, error);
     throw error;

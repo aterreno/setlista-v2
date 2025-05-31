@@ -58,8 +58,20 @@ make test-backend
 # Run frontend tests
 make test-frontend
 
-# Run E2E tests
-make test-e2e
+# Run tests with coverage
+make test-coverage
+
+# Run all tests with coverage
+make test-with-coverage
+
+# Run linting
+make lint
+
+# Run linting with auto-fix
+make lint-fix
+
+# Run pre-commit checks (tests + coverage + linting)
+make pre-commit-check
 ```
 
 ## Deployment

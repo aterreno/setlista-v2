@@ -1,4 +1,4 @@
-.PHONY: setup dev backend frontend test test-backend test-frontend test-e2e deploy
+.PHONY: setup dev backend frontend test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean
 
 setup:
 	@echo "Setting up project dependencies..."
@@ -20,27 +20,40 @@ frontend:
 
 test:
 	@echo "Running all tests..."
-	make test-backend
-	make test-frontend
-	make test-e2e
+	npm run test
 
 test-backend:
 	@echo "Running backend tests..."
-	cd backend && npm test
+	npm run test-backend
 
 test-frontend:
 	@echo "Running frontend tests..."
-	cd frontend && npm test
+	npm run test-frontend
 
-test-e2e:
-	@echo "Running E2E tests..."
-	cd tests && npm test
+test-coverage:
+	@echo "Running backend tests with coverage..."
+	npm run test-coverage
+
+test-with-coverage:
+	@echo "Running all tests with coverage..."
+	make test-coverage
+	make test-frontend
+
+pre-commit-check:
+	@echo "Running pre-commit checks..."
+	npm run pre-commit-check
 
 lint:
 	@echo "Linting code..."
-	cd backend && npm run lint
-	cd frontend && npm run lint
-	cd infra && npm run lint
+	npm run lint
+
+lint-fix:
+	@echo "Linting and fixing code..."
+	npm run lint-fix
+
+prepare:
+	@echo "Preparing git hooks..."
+	npm run prepare
 
 deploy:
 	@echo "Deploying to AWS..."

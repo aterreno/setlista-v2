@@ -134,8 +134,8 @@ export class SetlistaStack extends cdk.Stack {
 
     frontendBucket.addToResourcePolicy(bucketPolicyStatement);
 
-    // Update Lambda environment after distribution is created
-    apiFunction.addEnvironment('SPOTIFY_REDIRECT_URI', `https://${distribution.domainName}/auth/callback`);
+    // Output the CloudFront domain so SPOTIFY_REDIRECT_URI can be configured manually if needed
+    // The Lambda will construct the redirect URI dynamically using the Host header
 
     // Outputs
     new cdk.CfnOutput(this, 'CloudFrontURL', {

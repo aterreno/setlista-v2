@@ -1,2 +1,16 @@
-- Dependabot version updates
-Allow Dependabot to open pull requests automatically to keep your dependencies up-to-date when new versions are available. Learn more about configuring a dependabot.yml file.
+- add sentry
+- add google analytics
+- add dashboards in aws and alerts 
+    Set alerts for:
+    High error rate
+    Long Lambda durations
+    Increased cold starts
+    Frontend unhandled exceptions
+    Backend timeout/errors per endpoint
+- add little map of the venue if possible (image)
+- add instagram shots (search for it, insta has api), search for venue/artist
+
+
+
+
+
