@@ -50,6 +50,10 @@ jobs:
     - name: Install AWS CDK
       run: npm install -g aws-cdk
     
+    - name: Bootstrap CDK (if needed)
+      working-directory: ./infra
+      run: cdk bootstrap --require-approval never
+    
     - name: Deploy infrastructure and backend
       working-directory: ./infra
       run: cdk deploy --require-approval never
