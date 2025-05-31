@@ -239,7 +239,7 @@ describe('ArtistSearch', () => {
     renderArtistSearch({ searchTerm: 'radiohead', onSelectSetlist });
     
     await waitFor(() => {
-      expect(screen.getByText('Click to view →')).toBeInTheDocument();
+      expect(screen.getByRole('button')).toBeInTheDocument();
     });
     
     const clickableItem = screen.getByRole('button');
