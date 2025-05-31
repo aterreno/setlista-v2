@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
     "@types/jest": "^29.5.14",
-    "@types/node": "^20.17.57",
+    "@types/node": "^22.15.29",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "aws-cdk": "2.1017.1",
