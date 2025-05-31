@@ -13,10 +13,13 @@ const mockArtistController = {
 } as unknown as ArtistController;
 
 const mockSetlistController = {
+  searchSetlists: jest.fn((req: express.Request, res: express.Response) => {
+    res.json({ message: 'search setlists' });
+  }),
   getArtistSetlists: jest.fn((req: express.Request, res: express.Response) => {
     res.json({ message: 'setlist routes' });
   }),
-  getSetlistDetails: jest.fn((req: express.Request, res: express.Response) => {
+  getSetlistById: jest.fn((req: express.Request, res: express.Response) => {
     res.json({ message: 'setlist details' });
   }),
 } as unknown as SetlistController;

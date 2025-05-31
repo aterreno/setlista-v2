@@ -49,7 +49,7 @@ describe('Spotify Routes', () => {
 
   it('should handle POST /playlist route', async () => {
     const response = await request(app)
-      .post('/api/spotify/playlist')
+      .post('/api/spotify/playlist/setlist/123')
       .send({ songs: ['song1', 'song2'] });
     
     expect(response.status).toBe(200);

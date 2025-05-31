@@ -3,20 +3,20 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run backend tests and coverage (temporarily disabled due to config issues)
+# Run backend tests and coverage
 echo "📦 Testing backend..."
 cd backend
-# npm test
-# if [ $? -ne 0 ]; then
-#   echo "❌ Backend tests failed. Commit aborted."
-#   exit 1
-# fi
+npm test
+if [ $? -ne 0 ]; then
+  echo "❌ Backend tests failed. Commit aborted."
+  exit 1
+fi
 
-# npm run test:coverage
-# if [ $? -ne 0 ]; then
-#   echo "❌ Backend coverage threshold not met. Commit aborted."
-#   exit 1
-# fi
+npm run test:coverage
+if [ $? -ne 0 ]; then
+  echo "❌ Backend coverage threshold not met. Commit aborted."
+  exit 1
+fi
 
 # Run frontend tests and linting
 echo "🎨 Testing frontend..."

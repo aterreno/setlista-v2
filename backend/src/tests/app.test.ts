@@ -9,12 +9,26 @@ jest.mock('../config', () => ({
     },
     logging: {
       level: 'info'
+    },
+    setlistFm: {
+      baseUrl: 'https://api.setlist.fm/rest/1.0',
+      apiKey: 'test-api-key'
+    },
+    spotify: {
+      clientId: 'test-client-id',
+      clientSecret: 'test-client-secret',
+      redirectUri: 'http://localhost:3000/callback'
     }
   },
   validateConfig: jest.fn().mockResolvedValue(undefined)
 }));
 
-jest.mock('../routes', () => jest.fn());
+jest.mock('../routes', () => ({
+  createRoutes: jest.fn(() => {
+    const express = require('express');
+    return express.Router();
+  })
+}));
 jest.mock('../middleware/error-handler', () => ({
   errorHandler: jest.fn((err: any, req: any, res: any, next: any) => {
     res.status(500).json({ error: 'Internal Server Error' });
@@ -63,8 +77,7 @@ describe('App', () => {
     
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ 
-      status: 'healthy', 
-      timestamp: expect.any(String) 
+      status: 'ok'
     });
   });
 

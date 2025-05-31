@@ -15,9 +15,17 @@ jest.mock('../app', () => ({
   createApp: jest.fn(() => 'mock-app')
 }));
 
-// Mock config validation
+// Mock config validation and config object
 jest.mock('../config', () => ({
-  validateConfig: jest.fn().mockResolvedValue(undefined)
+  validateConfig: jest.fn().mockResolvedValue(undefined),
+  config: {
+    logging: {
+      level: 'info'
+    },
+    server: {
+      nodeEnv: 'test'
+    }
+  }
 }));
 
 describe('Lambda Handler', () => {
