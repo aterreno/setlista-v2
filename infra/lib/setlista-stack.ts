@@ -91,7 +91,7 @@ export class SetlistaStack extends cdk.Stack {
     distribution = new cloudfront.Distribution(this, 'DistributionV3', {
       comment: 'Setlista CloudFront Distribution v2',
       defaultBehavior: {
-        origin: new origins.S3Origin(frontendBucket),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,

@@ -1,0 +1,69 @@
+version: 2
+updates:
+  # Backend Node.js dependencies
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "aterreno"
+    labels:
+      - "dependencies"
+      - "backend"
+    commit-message:
+      prefix: "backend"
+      include: "scope"
+
+  # Frontend Node.js dependencies  
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday" 
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "aterreno"
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "frontend"
+      include: "scope"
+
+  # Infrastructure Node.js dependencies
+  - package-ecosystem: "npm"
+    directory: "/infra"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "aterreno"
+    labels:
+      - "dependencies"
+      - "infra"
+    commit-message:
+      prefix: "infra"
+      include: "scope"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "aterreno"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
