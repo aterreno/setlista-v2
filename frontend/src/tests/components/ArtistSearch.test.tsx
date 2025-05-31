@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import * as api from '../../services/api';
 import ArtistSearch from '../../components/ArtistSearch';
 
 // Mock the entire services/api module
@@ -13,8 +14,6 @@ jest.mock('../../services/api', () => ({
   createPlaylist: jest.fn(),
 }));
 
-// Import the mocked module
-import * as api from '../../services/api';
 const mockedApi = api as jest.Mocked<typeof api>;
 
 // Mock the formatDate utility
