@@ -52,7 +52,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
     <div className="artist-search">
       <h2>Search for Concerts</h2>
       <p className="search-instructions">
-        Search by artist name to find their recent concerts
+        Create a playlist on spotify by searching for your favorite artists and their recent concerts.
       </p>
       
       <div className="search-form">

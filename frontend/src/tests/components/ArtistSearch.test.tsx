@@ -59,7 +59,7 @@ describe('ArtistSearch', () => {
     
     expect(screen.getByText('Search for Concerts')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter artist name (e.g., Radiohead, Taylor Swift)...')).toBeInTheDocument();
-    expect(screen.getByText('Search by artist name to find their recent concerts')).toBeInTheDocument();
+    expect(screen.getByText('Create a playlist on spotify by searching for your favorite artists and their recent concerts.')).toBeInTheDocument();
   });
 
   it('displays search term from props', () => {

@@ -6,6 +6,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -44,6 +45,13 @@ export class SetlistaStack extends cdk.Stack {
       this, 
       'SpotifyClientSecret', 
       'setlista/spotify-client-secret'
+    );
+
+    // Import existing SSL certificate for custom domain
+    const certificate = certificatemanager.Certificate.fromCertificateArn(
+      this,
+      'SetlistaCertificate',
+      'arn:aws:acm:us-east-1:836481963552:certificate/ccba0ad1-f270-485b-8902-3a6276db8488'
     );
 
     // Create Lambda function for the backend
@@ -90,6 +98,8 @@ export class SetlistaStack extends cdk.Stack {
     // Now create CloudFront distribution after API Gateway is defined
     distribution = new cloudfront.Distribution(this, 'DistributionV3', {
       comment: 'Setlista CloudFront Distribution v2',
+      domainNames: ['setlista.terreno.dev'],
+      certificate: certificate,
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,

@@ -34,7 +34,9 @@
       "Bash(npm audit:*)",
       "Bash(make:*)",
       "Bash(grep:*)",
-      "Bash(aws:*)"
+      "Bash(aws:*)",
+      "Bash(npm run synth:*)",
+      "Bash(npm run deploy:*)"
     ]
   },
   "enableAllProjectMcpServers": false
