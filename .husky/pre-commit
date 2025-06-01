@@ -3,9 +3,17 @@
 
 echo "🔍 Running pre-commit checks..."
 
+# Run backend linting first
+echo "🔍 Linting backend..."
+cd backend
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Backend linting failed. Commit aborted."
+  exit 1
+fi
+
 # Run backend tests and coverage
 echo "📦 Testing backend..."
-cd backend
 npm test
 if [ $? -ne 0 ]; then
   echo "❌ Backend tests failed. Commit aborted."
@@ -18,18 +26,19 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Run frontend tests and linting
-echo "🎨 Testing frontend..."
+# Run frontend linting and tests
+echo "🎨 Linting frontend..."
 cd ../frontend
-npm test -- --watchAll=false
-if [ $? -ne 0 ]; then
-  echo "❌ Frontend tests failed. Commit aborted."
-  exit 1
-fi
-
 npm run lint
 if [ $? -ne 0 ]; then
   echo "❌ Frontend linting failed. Commit aborted."
+  exit 1
+fi
+
+echo "🎨 Testing frontend..."
+npm test -- --watchAll=false
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend tests failed. Commit aborted."
   exit 1
 fi
 

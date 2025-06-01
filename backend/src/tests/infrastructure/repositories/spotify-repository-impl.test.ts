@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { SpotifyRepositoryImpl } from '../../../infrastructure/repositories/spotify-repository-impl';
-import { config } from '../../../config';
 import logger from '../../../utils/logger';
 
 jest.mock('axios');

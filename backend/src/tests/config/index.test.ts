@@ -18,7 +18,7 @@ jest.mock('@aws-sdk/client-secrets-manager', () => {
 });
 
 describe('Config', () => {
-  let originalEnv: NodeJS.ProcessEnv;
+  let originalEnv: typeof process.env;
   let consoleSpy: jest.SpyInstance;
 
   beforeEach(() => {

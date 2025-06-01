@@ -29,11 +29,7 @@ jest.mock('../routes', () => ({
     return express.Router();
   })
 }));
-jest.mock('../middleware/error-handler', () => ({
-  errorHandler: jest.fn((err: any, req: any, res: any, next: any) => {
-    res.status(500).json({ error: 'Internal Server Error' });
-  })
-}));
+jest.mock('../utils/logger');
 
 describe('App', () => {
   let app: any;

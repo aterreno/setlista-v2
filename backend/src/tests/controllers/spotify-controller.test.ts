@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { SpotifyController } from '../../controllers/spotify-controller';
 import { SpotifyService } from '../../domain/services/spotify-service';
 import { SetlistService } from '../../domain/services/setlist-service';
-import { HttpError } from '../../domain/types';
 import logger from '../../utils/logger';
 
 jest.mock('../../utils/logger');

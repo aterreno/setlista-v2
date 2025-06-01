@@ -8,10 +8,10 @@
     "test-backend": "cd backend && npm test",
     "test-frontend": "cd frontend && npm test -- --watchAll=false",
     "test-coverage": "cd backend && npm run test:coverage",
-    "lint": "cd frontend && npm run lint",
-    "lint-fix": "cd frontend && npm run lint -- --fix",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
+    "lint-fix": "cd backend && npm run lint -- --fix && cd ../frontend && npm run lint -- --fix",
     "prepare": "husky",
-    "pre-commit-check": "npm run test && npm run test-coverage && npm run lint"
+    "pre-commit-check": "npm run lint && npm run test && npm run test-coverage"
   },
   "repository": {
     "type": "git",

@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { SetlistController } from '../../controllers/setlist-controller';
 import { SetlistService } from '../../domain/services/setlist-service';
 import { HttpError } from '../../domain/types';
-import logger from '../../utils/logger';
 
 jest.mock('../../utils/logger');
 
