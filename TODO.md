@@ -18,5 +18,7 @@ This search https://www.setlist.fm/search?query=Ryan+Adams+Paris
 Returns this https://www.setlist.fm/setlist/ryan-adams/2024/le-bataclan-paris-france-2b50b8ca.html
 - add dev environment: it would break so many things with this shitty claude code
     [local, docker, dev, prod]
-
+- Test coverage:
+  src/infrastructure/repositories |   64.85 |    36.03 |   66.66 |   66.37 |
+  setlist-repository-impl.ts     |   57.36 |    36.03 |   58.62 |   58.82 | 94,121-122,133-146,163-175,206-217,224-228,251-305,321,364,375-378,401,441,453-466,486-492
 
