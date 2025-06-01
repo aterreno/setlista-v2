@@ -47,12 +47,11 @@ export class SetlistaStack extends cdk.Stack {
       'setlista/spotify-client-secret'
     );
 
-    // Import existing SSL certificate for custom domain
-    const certificate = certificatemanager.Certificate.fromCertificateArn(
-      this,
-      'SetlistaCertificate',
-      'arn:aws:acm:us-east-1:836481963552:certificate/ccba0ad1-f270-485b-8902-3a6276db8488'
-    );
+    // Create SSL certificate for custom domain
+    const certificate = new certificatemanager.Certificate(this, 'SetlistaCertificate', {
+      domainName: 'setlista.terreno.dev',
+      validation: certificatemanager.CertificateValidation.fromDns(),
+    });
 
     // Create Lambda function for the backend
     const apiFunction = new lambda.Function(this, 'ApiFunction', {
