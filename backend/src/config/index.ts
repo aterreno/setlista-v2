@@ -1,19 +1,19 @@
 import dotenv from 'dotenv';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
 // Load environment variables from .env file
 dotenv.config();
 
 const isProduction = process.env.NODE_ENV === 'production';
-const secretsClient = isProduction ? new SecretsManagerClient({ region: 'us-east-1' }) : null;
 
 // Function to get secret from AWS Secrets Manager
 async function getSecret(secretName: string): Promise<string> {
-  if (!isProduction || !secretsClient) {
+  if (!isProduction) {
     return '';
   }
 
   try {
+    const { SecretsManagerClient, GetSecretValueCommand } = await import('@aws-sdk/client-secrets-manager');
+    const secretsClient = new SecretsManagerClient({ region: 'us-east-1' });
     const command = new GetSecretValueCommand({ SecretId: secretName });
     const response = await secretsClient.send(command);
     return response?.SecretString || '';
@@ -36,7 +36,7 @@ const config = {
   spotify: {
     clientId: process.env.SPOTIFY_CLIENT_ID || '',
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET || '',
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback',
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI || (process.env.NODE_ENV === 'production' ? 'https://setlista.terreno.dev/api/spotify/callback' : 'http://localhost:3000/api/spotify/callback'),
   },
   logging: {
     level: process.env.LOG_LEVEL || 'info',
