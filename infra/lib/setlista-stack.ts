@@ -50,6 +50,7 @@ export class SetlistaStack extends cdk.Stack {
     // Create SSL certificate for custom domain
     const certificate = new certificatemanager.Certificate(this, 'SetlistaCertificate', {
       domainName: 'setlista.terreno.dev',
+      subjectAlternativeNames: ['api.setlista.terreno.dev'],
       validation: certificatemanager.CertificateValidation.fromDns(),
     });
 
@@ -143,6 +144,20 @@ export class SetlistaStack extends cdk.Stack {
 
     frontendBucket.addToResourcePolicy(bucketPolicyStatement);
 
+    // Create a separate CloudFront distribution for the API subdomain
+    const apiDistribution = new cloudfront.Distribution(this, 'ApiDistribution', {
+      comment: 'Setlista API CloudFront Distribution',
+      domainNames: ['api.setlista.terreno.dev'],
+      certificate: certificate,
+      defaultBehavior: {
+        origin: new origins.RestApiOrigin(api),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+      },
+    });
+
     // Output the CloudFront domain so SPOTIFY_REDIRECT_URI can be configured manually if needed
     // The Lambda will construct the redirect URI dynamically using the Host header
 
@@ -165,6 +180,16 @@ export class SetlistaStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiURL', {
       value: api.url,
       description: 'URL of the API Gateway',
+    });
+
+    new cdk.CfnOutput(this, 'ApiDistributionId', {
+      value: apiDistribution.distributionId,
+      description: 'ID of the API CloudFront distribution',
+    });
+
+    new cdk.CfnOutput(this, 'ApiDistributionURL', {
+      value: `https://${apiDistribution.domainName}`,
+      description: 'URL of the API CloudFront distribution',
     });
   }
 }
