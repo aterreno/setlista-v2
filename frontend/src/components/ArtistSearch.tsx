@@ -4,6 +4,8 @@ import { searchSetlists } from '../services/api.ts';
 import { Setlist } from '../types/index.ts';
 import { formatDate } from '../utils/formatters.ts';
 import { useDebounce } from '../hooks/useDebounce.ts';
+import { SEARCH_CONFIG } from '../constants';
+import { UI_TEXT, formatText } from '../constants/ui-text';
 
 interface ArtistSearchProps {
   onSelectSetlist: (setlist: Setlist) => void;
@@ -20,14 +22,14 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
   page, 
   onPageChange 
 }) => {
-  // Debounce search term with 500ms delay to avoid excessive API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, SEARCH_CONFIG.DEBOUNCE_DELAY);
 
   const { data, isLoading, error } = useQuery(
     ['setlist-search', debouncedSearchTerm, page],
     () => searchSetlists(debouncedSearchTerm, page),
     {
-      enabled: debouncedSearchTerm.length > 2, // Only search when at least 3 characters
+      enabled: debouncedSearchTerm.length >= SEARCH_CONFIG.MIN_LENGTH, // Only search when at least minimum characters
     }
   );
 
@@ -60,7 +62,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
           type="text"
           value={searchTerm}
           onChange={handleSearchTermChange}
-          placeholder="Enter artist name (e.g., Radiohead, Taylor Swift)..."
+          placeholder="Enter artist name or artist + city"
           aria-label="Search query"
         />
       </div>

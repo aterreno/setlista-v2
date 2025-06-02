@@ -1,23 +1,19 @@
 import axios from 'axios';
 import { config } from '../../config';
 import { SpotifyRepository, SpotifyTrack, SpotifyPlaylist } from '../../domain/repositories/spotify-repository';
+import { API_ENDPOINTS, TIMEOUTS, SPOTIFY_CONFIG } from '../../constants';
 import logger from '../../utils/logger';
 
 export class SpotifyRepositoryImpl implements SpotifyRepository {
   private readonly clientId = config.spotify.clientId;
   private readonly clientSecret = config.spotify.clientSecret;
   private readonly redirectUri = config.spotify.redirectUri;
-  private readonly baseUrl = 'https://api.spotify.com/v1';
-  private readonly authUrl = 'https://accounts.spotify.com/authorize';
-  private readonly tokenUrl = 'https://accounts.spotify.com/api/token';
+  private readonly baseUrl = API_ENDPOINTS.SPOTIFY.BASE_URL;
+  private readonly authUrl = API_ENDPOINTS.SPOTIFY.AUTH_URL;
+  private readonly tokenUrl = API_ENDPOINTS.SPOTIFY.TOKEN_URL;
 
   getAuthorizationUrl(): string {
-    const scopes = [
-      'user-read-private',
-      'user-read-email',
-      'playlist-modify-public',
-      'playlist-modify-private',
-    ];
+    const scopes = SPOTIFY_CONFIG.SCOPES;
 
     const params = new URLSearchParams({
       client_id: this.clientId,
@@ -49,7 +45,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
           'Content-Type': 'application/x-www-form-urlencoded',
           Authorization: `Basic ${auth}`,
         },
-        timeout: 30000,
+        timeout: TIMEOUTS.SPOTIFY_API,
       });
 
       return {
@@ -73,7 +69,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        timeout: 30000,
+        timeout: TIMEOUTS.SPOTIFY_API,
       });
 
       return {
@@ -98,7 +94,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
           type: 'track',
           limit: 5,
         },
-        timeout: 30000,
+        timeout: TIMEOUTS.SPOTIFY_API,
       });
 
       return response.data.tracks.items;
@@ -127,7 +123,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
-          timeout: 30000,
+          timeout: TIMEOUTS.SPOTIFY_API,
         }
       );
 
@@ -154,7 +150,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
-          timeout: 30000,
+          timeout: TIMEOUTS.SPOTIFY_API,
         }
       );
     } catch (error) {

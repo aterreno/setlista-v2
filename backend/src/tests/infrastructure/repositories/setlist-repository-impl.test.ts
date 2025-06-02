@@ -22,6 +22,26 @@ jest.mock('../../../utils/logger', () => ({
   error: jest.fn()
 }));
 
+// Mock constants
+jest.mock('../../../constants', () => ({
+  API_ENDPOINTS: {
+    SETLIST_FM: {
+      BASE_URL: 'https://api.setlist.fm/rest/1.0',
+      OPENSEARCH: 'https://www.setlist.fm/opensearch'
+    }
+  },
+  TIMEOUTS: {
+    SETLIST_FM_API: 5000
+  },
+  PAGINATION: {
+    DEFAULT_ITEMS_PER_PAGE: 20,
+    MAX_PAGES_TO_FETCH: 10
+  },
+  TEXT_FILTERS: {
+    VENUE_STOP_WORDS: ['setlist', 'at', 'the', 'and', 'in', 'on']
+  }
+}));
+
 describe('SetlistRepositoryImpl', () => {
   let repository: SetlistRepositoryImpl;
 
@@ -221,60 +241,40 @@ describe('SetlistRepositoryImpl', () => {
   });
 
   describe('searchSetlists', () => {
-    it('should search setlists with suggestions', async () => {
-      // Mock opensearch response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['test', ['Test Artist', 'Another Test']]
-      });
-
+    it('should search setlists by artist name only', async () => {
+      // Use "Test band" - "band" is in commonArtistWords so won't be parsed as city
       // Mock artist search response
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           artist: [{
             mbid: 'artist1',
-            name: 'Test Artist'
+            name: 'Test Band'
           }]
         }
       });
 
-      // Mock setlist response
+      // Mock artist setlists response
       mockedAxios.get.mockResolvedValueOnce({
         data: {
-          type: 'setlists',
-          itemsPerPage: 20,
-          page: 1,
-          total: 1,
           setlist: [{
             id: 'setlist1',
-            artist: { name: 'Test Artist' }
+            artist: { name: 'Test Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
           }]
         }
       });
 
-      const result = await repository.searchSetlists('Test Artist');
+      const result = await repository.searchSetlists('Test band');
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe('setlist1');
+      expect(result.items[0].artist.name).toBe('Test Band');
     });
 
-    it('should handle location-based search', async () => {
-      // Mock opensearch response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['london', ['London', 'London UK']]
-      });
-
-      // Mock venue search response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          venue: [{
-            id: 'venue1',
-            name: 'Test Venue',
-            city: { name: 'London' }
-          }]
-        }
-      });
-
-      // Mock setlist response for venue
+    it('should parse artist and city from query', async () => {
+      // Mock direct API search with params (artist + city)
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           type: 'setlists',
@@ -283,58 +283,68 @@ describe('SetlistRepositoryImpl', () => {
           total: 1,
           setlist: [{
             id: 'setlist1',
-            venue: { name: 'Test Venue' }
+            artist: { name: 'Ryan Adams' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Paris', country: { name: 'France' } } },
+            sets: { set: [] }
           }]
         }
       });
 
-      const result = await repository.searchSetlists('London');
+      const result = await repository.searchSetlists('Ryan Adams Paris');
 
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        'https://api.setlist.fm/rest/1.0/search/setlists',
+        expect.objectContaining({
+          params: {
+            artistName: 'Ryan Adams',
+            cityName: 'Paris',
+            p: 1
+          }
+        })
+      );
       expect(result.items).toHaveLength(1);
     });
 
-    it('should fallback to artist search when suggestions fail', async () => {
-      // Mock opensearch response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['test', []]
-      });
+    it('should fallback to manual city filtering when direct search fails', async () => {
+      // Mock direct API search failure
+      mockedAxios.get.mockRejectedValueOnce(new Error('Direct search failed'));
 
-      // Mock artist search fallback
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          artist: [{
-            mbid: 'artist1',
-            name: 'Test Artist'
-          }]
-        }
-      });
-
-      // Mock setlist response
+      // Mock artist + city manual filtering search
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           type: 'setlists',
           itemsPerPage: 20,
           page: 1,
-          total: 1,
-          setlist: [{
-            id: 'setlist1',
-            artist: { name: 'Test Artist' }
-          }]
+          total: 2,
+          setlist: [
+            {
+              id: 'setlist1',
+              artist: { name: 'Test Artist' },
+              eventDate: '01-01-2023',
+              venue: { name: 'Venue 1', city: { name: 'Paris', country: { name: 'France' } } },
+              sets: { set: [] }
+            },
+            {
+              id: 'setlist2',
+              artist: { name: 'Test Artist' },
+              eventDate: '02-01-2023',
+              venue: { name: 'Venue 2', city: { name: 'London', country: { name: 'UK' } } },
+              sets: { set: [] }
+            }
+          ]
         }
       });
 
-      const result = await repository.searchSetlists('Test Artist');
+      const result = await repository.searchSetlists('Test Artist Paris');
 
+      // Should return only Paris results
       expect(result.items).toHaveLength(1);
+      expect(result.items[0].venue.city.name).toBe('Paris');
     });
 
     it('should handle 404 errors gracefully', async () => {
-      // Mock opensearch response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['test', []]
-      });
-
-      // Mock 404 error
+      // Mock 404 error from artist search
       const error = new Error('Not found');
       (error as any).response = { status: 404 };
       mockedAxios.get.mockRejectedValueOnce(error);
@@ -350,14 +360,15 @@ describe('SetlistRepositoryImpl', () => {
       });
     });
 
-    it('should handle other API errors', async () => {
-      // Mock 500 error for all axios calls
+    it('should handle other API errors gracefully', async () => {
+      // Mock 500 error for artist search
       const error = new Error('Server error');
       (error as any).response = { status: 500 };
-      mockedAxios.get.mockRejectedValue(error);
+      mockedAxios.get.mockRejectedValueOnce(error);
 
-      // searchSetlists is designed to never throw, it returns empty results on error
       const result = await repository.searchSetlists('Test');
+      
+      // searchArtistByName catches all errors and returns empty results
       expect(result).toEqual({
         type: 'setlists',
         itemsPerPage: 20,
@@ -370,21 +381,34 @@ describe('SetlistRepositoryImpl', () => {
       mockedAxios.get.mockReset();
     });
 
-    it('should handle opensearch API failure', async () => {
-      // Mock opensearch failure for all calls
-      const error = new Error('Opensearch failed');
-      (error as any).response = { status: 500 };
-      mockedAxios.get.mockRejectedValue(error);
-
-      // searchSetlists handles all failures gracefully and returns empty results
-      const result = await repository.searchSetlists('Test');
-      expect(result).toEqual({
-        type: 'setlists',
-        itemsPerPage: 20,
-        page: 1,
-        total: 0,
-        items: []
+    it('should fallback to artist-only search when city parsing fails', async () => {
+      // Mock artist search response for query without clear city
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: [{
+            mbid: 'artist1',
+            name: 'Test Band'
+          }]
+        }
       });
+
+      // Mock artist setlists response
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [{
+            id: 'setlist1',
+            artist: { name: 'Test Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
+          }]
+        }
+      });
+
+      const result = await repository.searchSetlists('Test band');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].artist.name).toBe('Test Band');
       
       // Reset mock for subsequent tests
       mockedAxios.get.mockReset();
@@ -450,148 +474,328 @@ describe('SetlistRepositoryImpl', () => {
       mockedAxios.get.mockReset();
     });
 
-    it('should handle venue search with results', async () => {
-      // Mock opensearch response for location
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['venue', ['Madison Square Garden']]
-      });
-
-      // Mock venue search response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          venue: [{
-            id: 'venue1',
-            name: 'Madison Square Garden',
-            city: { name: 'New York' }
-          }]
-        }
-      });
-
-      // Mock setlist response for venue
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          type: 'setlists',
-          itemsPerPage: 20,
-          page: 1,
-          total: 5,
-          setlist: [{
-            id: 'setlist1',
-            venue: { name: 'Madison Square Garden' }
-          }]
-        }
-      });
-
-      const result = await repository.searchSetlists('Madison Square Garden');
-
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].venue.name).toBe('Madison Square Garden');
-    });
-
-    it('should handle venue search failure and fallback', async () => {
-      // Mock opensearch response for location
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['venue', ['Test Venue']]
-      });
-
-      // Mock venue search failure
-      mockedAxios.get.mockRejectedValueOnce(new Error('Venue search failed'));
-
-      // Mock fallback artist search
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          artist: [{
-            mbid: 'artist1',
-            name: 'Test Artist'
-          }]
-        }
-      });
-
-      // Mock setlist response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          type: 'setlists',
-          itemsPerPage: 20,
-          page: 1,
-          total: 1,
-          setlist: [{
-            id: 'setlist1',
-            artist: { name: 'Test Artist' }
-          }]
-        }
-      });
-
-      const result = await repository.searchSetlists('Test Venue');
-
-      expect(result.items).toHaveLength(1);
-    });
-
     it('should handle multiple artist results and get their setlists', async () => {
-      // Mock opensearch response
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['test', ['Test Artist']]
-      });
-
       // Mock artist search with multiple results
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           artist: [
-            { mbid: 'artist1', name: 'Test Artist' },
-            { mbid: 'artist2', name: 'Test Band' }
+            { mbid: 'artist1', name: 'Test Band' },
+            { mbid: 'artist2', name: 'Another Band' }
           ]
         }
       });
 
-      // Mock setlist responses for each artist
-      mockedAxios.get
-        .mockResolvedValueOnce({
-          data: {
-            setlist: [{
-              id: 'setlist1',
-              artist: { name: 'Test Artist' }
-            }]
-          }
-        })
-        .mockResolvedValueOnce({
-          data: {
-            setlist: [{
-              id: 'setlist2',
-              artist: { name: 'Test Band' }
-            }]
-          }
-        });
-
-      const result = await repository.searchSetlists('Test Artist');
-
-      // Method returns setlists from first artist that has them, not combined from all
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].id).toBe('setlist1');
-    });
-
-    it('should handle suggestion execution failure gracefully', async () => {
-      // Mock opensearch response with multiple suggestions
-      mockedAxios.get.mockResolvedValueOnce({
-        data: ['test', ['Test Artist', 'Test Band']]
-      });
-
-      // Mock first suggestion failure
-      mockedAxios.get.mockRejectedValueOnce(new Error('First suggestion failed'));
-
-      // Mock second suggestion success
-      mockedAxios.get.mockResolvedValueOnce({
-        data: {
-          artist: [{
-            mbid: 'artist1',
-            name: 'Test Band'
-          }]
-        }
-      });
-
-      // Mock setlist response
+      // Mock setlist responses for first artist
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           setlist: [{
             id: 'setlist1',
-            artist: { name: 'Test Band' }
+            artist: { name: 'Test Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
+          }]
+        }
+      });
+
+      const result = await repository.searchSetlists('Test band');
+      
+      // Method returns setlists from first artist that has them
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('setlist1');
+    });
+
+    it('should handle multi-page city filtering', async () => {
+      // Mock direct search failure (forces fallback to manual filtering)
+      mockedAxios.get.mockRejectedValueOnce(new Error('Direct search failed'));
+
+      // Mock multi-page artist search with city filtering
+      mockedAxios.get
+        .mockResolvedValueOnce({
+          data: {
+            type: 'setlists',
+            itemsPerPage: 20,
+            page: 1,
+            total: 3,
+            setlist: [
+              {
+                id: 'setlist1',
+                artist: { name: 'Artist' },
+                eventDate: '01-01-2023',
+                venue: { name: 'Venue 1', city: { name: 'Paris', country: { name: 'France' } } },
+                sets: { set: [] }
+              },
+              {
+                id: 'setlist2', 
+                artist: { name: 'Artist' },
+                eventDate: '02-01-2023',
+                venue: { name: 'Venue 2', city: { name: 'London', country: { name: 'UK' } } },
+                sets: { set: [] }
+              }
+            ]
+          }
+        });
+
+      const result = await repository.searchSetlists('Artist Paris');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].venue.city.name).toBe('Paris');
+    });
+
+    it('should handle empty artist search results', async () => {
+      // Mock empty artist search response
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: []
+        }
+      });
+
+      const result = await repository.searchSetlists('Nonexistent Artist');
+
+      expect(result).toEqual({
+        type: 'setlists',
+        itemsPerPage: 20,
+        page: 1,
+        total: 0,
+        items: []
+      });
+    });
+
+    it('should handle artist search that returns artists but no setlists', async () => {
+      // Mock artist search with results
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: [
+            { mbid: 'artist1', name: 'No Setlists Artist' }
+          ]
+        }
+      });
+
+      // Mock empty setlists response for the artist
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: []
+        }
+      });
+
+      const result = await repository.searchSetlists('No Setlists Artist');
+
+      expect(result).toEqual({
+        type: 'setlists',
+        itemsPerPage: 20,
+        page: 1,
+        total: 0,
+        items: []
+      });
+    });
+
+    it('should handle artist setlist API errors and try next artist', async () => {
+      // Use "Test band" to avoid city parsing, then test multiple artists
+      // Mock artist search with multiple results
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: [
+            { mbid: 'artist1', name: 'First Band' },
+            { mbid: 'artist2', name: 'Second Band' }
+          ]
+        }
+      });
+
+      // Mock first artist setlist API 404 error
+      const error404 = new Error('First artist setlist failed');
+      (error404 as any).response = { status: 404 };
+      mockedAxios.get.mockRejectedValueOnce(error404);
+
+      // Mock second artist setlist success
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [{
+            id: 'setlist1',
+            artist: { name: 'Second Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
+          }]
+        }
+      });
+
+      const result = await repository.searchSetlists('Test band');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].artist.name).toBe('Second Band');
+    });
+
+    it('should handle city name with venue term filtering', async () => {
+      // Test a query that includes venue terms in the location search
+      // Mock direct search failure to force manual filtering
+      mockedAxios.get.mockRejectedValueOnce(new Error('Direct search failed'));
+
+      // Mock manual filtering search with venue terms
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [
+            {
+              id: 'setlist1',
+              artist: { name: 'Test Artist' },
+              eventDate: '01-01-2023',
+              venue: { name: 'London Venue', city: { name: 'London', country: { name: 'UK' } } },
+              sets: { set: [{ song: [{ name: 'Song 1' }] }] }
+            },
+            {
+              id: 'setlist2',
+              artist: { name: 'Test Artist' },
+              eventDate: '02-01-2023', 
+              venue: { name: 'Paris Venue', city: { name: 'Paris', country: { name: 'France' } } },
+              sets: { set: [] }
+            }
+          ]
+        }
+      });
+
+      const result = await repository.searchSetlists('Test Artist London');
+
+      // Should filter to only London results and sort by song count
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].venue.city.name).toBe('London');
+    });
+  });
+
+  describe('additional edge cases for coverage', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockedAxios.get.mockReset();
+    });
+
+    it('should handle artist sorting by exact match priority', async () => {
+      // Mock artist search with multiple results including exact match
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: [
+            { mbid: 'artist1', name: 'Test Band' }, // Exact match
+            { mbid: 'artist2', name: 'Test Band & Friends' }, // Contains but not exact
+            { mbid: 'artist3', name: 'Another Test' } // Partial match
+          ]
+        }
+      });
+
+      // Mock setlist response for first (exact match) artist
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [{
+            id: 'setlist1',
+            artist: { name: 'Test Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
+          }]
+        }
+      });
+
+      const result = await repository.searchSetlists('Test Band');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].artist.name).toBe('Test Band');
+    });
+
+    it('should handle setlist sorting by venue match and song count', async () => {
+      // Mock direct search failure to trigger manual filtering
+      mockedAxios.get.mockRejectedValueOnce(new Error('Direct search failed'));
+
+      // Mock manual filtering with multiple setlists for sorting
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [
+            {
+              id: 'setlist2',
+              artist: { name: 'Artist' },
+              eventDate: '01-01-2023',
+              venue: { name: 'London Venue', city: { name: 'London', country: { name: 'UK' } } },
+              sets: { set: [{ song: [{ name: 'Song 1' }] }] }
+            },
+            {
+              id: 'setlist1',
+              artist: { name: 'Artist' },
+              eventDate: '02-01-2023',
+              venue: { name: 'London Arena', city: { name: 'London', country: { name: 'UK' } } },
+              sets: { set: [{ song: [{ name: 'Song 1' }, { name: 'Song 2' }] }] }
+            },
+            {
+              id: 'setlist3',
+              artist: { name: 'Artist' },
+              eventDate: '03-01-2023',
+              venue: { name: 'Other Venue', city: { name: 'Paris', country: { name: 'France' } } },
+              sets: { set: [{ song: [{ name: 'Song 1' }, { name: 'Song 2' }, { name: 'Song 3' }] }] }
+            }
+          ]
+        }
+      });
+
+      const result = await repository.searchSetlists('Artist London');
+
+      // Should return London venues filtered by city
+      expect(result.items).toHaveLength(2);
+      // Verify both are London venues
+      expect(result.items[0].venue.city.name).toBe('London');
+      expect(result.items[1].venue.city.name).toBe('London');
+    });
+
+    it('should handle venue-based search path', async () => {
+      // Test a city-only query that could trigger venue search
+      await repository.searchSetlists('London');
+
+      // This will go through the normal artist search path since it's a single word
+      // but exercises the sorting and filtering logic
+      expect(mockedAxios.get).toHaveBeenCalled();
+    });
+
+    it('should handle multiple page city filtering with max pages', async () => {
+      // Mock direct search failure
+      mockedAxios.get.mockRejectedValueOnce(new Error('Direct search failed'));
+
+      // Mock multiple pages of manual filtering
+      for (let i = 0; i < 11; i++) { // More than MAX_PAGES_TO_FETCH (10)
+        mockedAxios.get.mockResolvedValueOnce({
+          data: {
+            setlist: [
+              {
+                id: `setlist${i}`,
+                artist: { name: 'Artist' },
+                eventDate: `0${(i % 9) + 1}-01-2023`,
+                venue: { name: 'Other Venue', city: { name: 'Other City', country: { name: 'Country' } } },
+                sets: { set: [] }
+              }
+            ]
+          }
+        });
+      }
+
+      const result = await repository.searchSetlists('Artist Paris');
+
+      // Should not find Paris results but handle the pagination limit
+      expect(result.items).toHaveLength(0);
+    });
+
+    it('should handle artist name contains check logic', async () => {
+      // Mock artist search with names that test contains logic
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          artist: [
+            { mbid: 'artist1', name: 'The Test Band' }, // Starts with query
+            { mbid: 'artist2', name: 'My Test Group' }, // Contains query
+            { mbid: 'artist3', name: 'Completely Different' } // No match
+          ]
+        }
+      });
+
+      // Mock setlist response for first artist
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          setlist: [{
+            id: 'setlist1',
+            artist: { name: 'The Test Band' },
+            eventDate: '01-01-2023',
+            venue: { name: 'Test Venue', city: { name: 'Test City', country: { name: 'Test Country' } } },
+            sets: { set: [] }
           }]
         }
       });
@@ -599,7 +803,7 @@ describe('SetlistRepositoryImpl', () => {
       const result = await repository.searchSetlists('Test');
 
       expect(result.items).toHaveLength(1);
-      expect(result.items[0].artist.name).toBe('Test Band');
+      expect(result.items[0].artist.name).toBe('The Test Band');
     });
   });
 });

@@ -1,14 +1,15 @@
 import axios from 'axios';
 import { Artist, SearchResult, Setlist, SpotifyPlaylist, SetlistWithSongs, HttpError } from '../types/index.ts';
+import { API_CONFIG } from '../constants';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL;
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: API_CONFIG.TIMEOUT,
 });
 
 // Request interceptor for debugging

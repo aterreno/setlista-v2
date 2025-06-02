@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SetlistService } from '../domain/services/setlist-service';
 import { HttpError } from '../domain/types';
+import { SEARCH_CONFIG, VALIDATION } from '../constants';
 import logger from '../utils/logger';
 
 export class SetlistController {
@@ -17,7 +18,7 @@ export class SetlistController {
       }
 
       // Validate search query to prevent malicious input (allow URLs and normal text)
-      if (q.length > 200 || /[;|&$`{}[\]\\]/.test(q)) {
+      if (q.length > SEARCH_CONFIG.MAX_QUERY_LENGTH || VALIDATION.MALICIOUS_CHARS_REGEX.test(q)) {
         res.status(400).json({ error: 'Invalid search query format' });
         return;
       }
@@ -52,7 +53,7 @@ export class SetlistController {
       }
 
       // Validate artistId format (should be alphanumeric with possible hyphens/underscores)
-      if (!/^[a-zA-Z0-9\-_]+$/.test(artistId)) {
+      if (!VALIDATION.ID_REGEX.test(artistId)) {
         logger.warn('Artist ID validation failed: invalid format', { artistId });
         res.status(400).json({ error: 'Invalid artist ID format' });
         return;
@@ -84,7 +85,7 @@ export class SetlistController {
       }
 
       // Validate setlistId format
-      if (!/^[a-zA-Z0-9\-_]+$/.test(setlistId)) {
+      if (!VALIDATION.ID_REGEX.test(setlistId)) {
         res.status(400).json({ error: 'Invalid setlist ID format' });
         return;
       }

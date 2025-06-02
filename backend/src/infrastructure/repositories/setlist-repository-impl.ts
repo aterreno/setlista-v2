@@ -2,6 +2,7 @@ import axios from 'axios';
 import { config } from '../../config';
 import { Artist, SearchResult, Setlist } from '../../domain/types';
 import { SetlistRepository } from '../../domain/repositories/setlist-repository';
+import { API_ENDPOINTS, TIMEOUTS, PAGINATION, TEXT_FILTERS } from '../../constants';
 import logger from '../../utils/logger';
 
 export class SetlistRepositoryImpl implements SetlistRepository {
@@ -76,58 +77,45 @@ export class SetlistRepositoryImpl implements SetlistRepository {
 
   async searchSetlists(query: string, page = 1): Promise<SearchResult<Setlist>> {
     try {
-      // First, use the opensearch to get intelligent suggestions
-      const suggestions = await this.getSearchSuggestions(query);
-      logger.info('Search suggestions received', { query, suggestions });
+      logger.info('Searching setlists', { query, page });
 
-      // Check if this is a location-only search
-      const isLocationSearch = this.isLocationQuery(query);
+      // Parse the query to extract artist and location components
+      const { artistName, cityName } = this.parseSearchQuery(query);
       
-      if (isLocationSearch) {
-        logger.info('Detected location search, trying venue search first', { query });
+      // Try direct API search with parsed parameters first
+      if (artistName && cityName) {
+        logger.info('Attempting artist + city search', { artistName, cityName });
         try {
-          const venueResult = await this.searchByVenue(query, page);
-          if (venueResult.items.length > 0) {
-            return venueResult;
+          const result = await this.searchSetlistsWithParams(artistName, cityName, page);
+          if (result.items.length > 0) {
+            return result;
           }
         } catch (error) {
-          logger.warn('Venue search failed for location', { query, error: (error as Error).message });
+          logger.warn('Artist + city search failed, falling back to manual filtering', { error: (error as Error).message });
         }
       }
 
-      // Try to execute the best suggestion, but only if it's relevant to the query and not a pure location search
-      if (suggestions.length > 0 && !isLocationSearch) {
-        const relevantSuggestions = suggestions.filter(suggestion => {
-          const queryWords = query.toLowerCase().split(/\s+/);
-          const suggestionLower = suggestion.toLowerCase();
-          // Only use suggestions that contain most words from the original query
-          return queryWords.some(word => word.length > 2 && suggestionLower.includes(word));
-        });
-
-        logger.info('Filtered relevant suggestions', { 
-          original: suggestions.length, 
-          relevant: relevantSuggestions.length,
-          relevantSuggestions 
-        });
-
-        for (const suggestion of relevantSuggestions.slice(0, 3)) { // Try top 3 relevant suggestions
-          try {
-            const result = await this.executeSearchSuggestion(suggestion, page);
-            if (result.items.length > 0) {
-              logger.info('Found results with relevant suggestion', { suggestion, count: result.items.length });
-              return result;
-            }
-          } catch (error) {
-            logger.warn('Relevant suggestion failed', { suggestion, error: (error as Error).message });
-            continue;
+      // Fallback: search by artist and manually filter by city
+      if (artistName && cityName) {
+        logger.info('Attempting artist search with manual city filtering', { artistName, cityName });
+        try {
+          const result = await this.searchArtistWithCityFilter(artistName, cityName, page);
+          if (result.items.length > 0) {
+            return result;
           }
+        } catch (error) {
+          logger.warn('Artist search with city filtering failed', { error: (error as Error).message });
         }
       }
 
-      // Fallback to original search logic
-      logger.info('Falling back to original search logic', { query });
+      // Fallback: if we have an artist name, search just by artist
+      if (artistName) {
+        logger.info('Falling back to artist-only search', { artistName });
+        return this.searchArtistByName(artistName, page);
+      }
 
-      // Just try simple artist search with the original query
+      // Final fallback: treat entire query as artist name
+      logger.info('Falling back to treating entire query as artist name', { query });
       return this.searchArtistByName(query, page);
     } catch (error: any) {
       logger.error('Error searching for setlists', { error: error.message, query });
@@ -136,7 +124,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       if (error.response?.status === 404) {
         return {
           type: 'setlists',
-          itemsPerPage: 20,
+          itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
           page: page,
           total: 0,
           items: [],
@@ -227,7 +215,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       });
       return {
         type: 'setlists',
-        itemsPerPage: 20,
+        itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
         page: page,
         total: 0,
         items: [],
@@ -241,7 +229,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
     const venueTerms = originalQuery.toLowerCase()
       .replace(artistQuery.toLowerCase(), '') // Remove artist name
       .split(/\s+/)
-      .filter(word => word.length > 2 && !['setlist', 'at', 'the', 'and', 'in', 'on'].includes(word));
+      .filter(word => word.length > 2 && !TEXT_FILTERS.VENUE_STOP_WORDS.includes(word));
 
     logger.info('Extracted venue terms for filtering', { venueTerms });
 
@@ -307,7 +295,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
 
       const result = {
         type: 'setlists',
-        itemsPerPage: 20,
+        itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
         page: page,
         total: setlists.length,
         items: setlists,
@@ -324,37 +312,188 @@ export class SetlistRepositoryImpl implements SetlistRepository {
     return result;
   }
 
-  private isLocationQuery(query: string): boolean {
-    const queryLower = query.toLowerCase().trim();
-    const words = queryLower.split(/\s+/);
+  private parseSearchQuery(query: string): { artistName: string | null; cityName: string | null } {
+    const words = query.trim().split(/\s+/);
     
-    // Common city names and location indicators
-    const cityNames = [
-      'london', 'manchester', 'birmingham', 'liverpool', 'leeds', 'glasgow', 'edinburgh', 'bristol', 'brighton',
-      'new york', 'los angeles', 'chicago', 'boston', 'san francisco', 'seattle', 'portland', 'austin', 'denver',
-      'paris', 'berlin', 'madrid', 'rome', 'amsterdam', 'barcelona', 'vienna', 'prague', 'dublin', 'stockholm',
-      'toronto', 'montreal', 'vancouver', 'sydney', 'melbourne', 'tokyo', 'osaka'
-    ];
-    
-    // If it's a known city (single or multi-word)
-    if (cityNames.includes(queryLower)) {
-      return true;
+    // For queries with 2+ words, try to intelligently detect if last word is a city
+    if (words.length >= 2) {
+      const lastWord = words[words.length - 1];
+      
+      // Simple heuristics to detect if last word might be a city:
+      // 1. Starts with capital letter
+      // 2. Not common artist words
+      const commonArtistWords = ['band', 'group', 'orchestra', 'choir', 'ensemble', 'project', 'collective'];
+      const lastWordLower = lastWord.toLowerCase();
+      
+      // If last word looks like it could be a city and isn't a common artist word
+      if (lastWord[0] === lastWord[0].toUpperCase() && 
+          !commonArtistWords.includes(lastWordLower) &&
+          lastWord.length > 2) {
+        
+        const potentialArtist = words.slice(0, -1).join(' ');
+        
+        logger.info('Parsed search query with potential city', { 
+          originalQuery: query,
+          artistName: potentialArtist,
+          cityName: lastWord
+        });
+        
+        return { 
+          artistName: potentialArtist, 
+          cityName: lastWord 
+        };
+      }
     }
     
-    // If query contains location indicators
-    const locationIndicators = ['city', 'venue', 'stadium', 'arena', 'hall', 'center', 'centre', 'theatre', 'theater', 'garden'];
-    if (words.some(word => locationIndicators.includes(word))) {
-      return true;
-    }
+    // Default: treat entire query as artist name
+    logger.info('Parsed search query as artist-only', { 
+      originalQuery: query,
+      artistName: query,
+      cityName: null
+    });
     
-    return false;
+    return { artistName: query, cityName: null };
+  }
+
+  private async searchSetlistsWithParams(artistName: string, cityName: string, page: number): Promise<SearchResult<Setlist>> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/search/setlists`,
+        {
+          headers: {
+            ...this.getHeaders(),
+            'Accept': 'application/json',
+          },
+          params: {
+            artistName,
+            cityName,
+            p: page,
+          },
+        }
+      );
+
+      return {
+        type: response.data.type || 'setlists',
+        itemsPerPage: response.data.itemsPerPage || 20,
+        page: response.data.page || page,
+        total: response.data.total || 0,
+        items: response.data.setlist || [],
+      };
+    } catch (error: any) {
+      logger.error('Error searching setlists with params', { error: error.message, artistName, cityName });
+      throw error;
+    }
+  }
+
+  private async searchArtistWithCityFilter(artistName: string, cityName: string, requestedPage: number): Promise<SearchResult<Setlist>> {
+    try {
+      // We need to fetch multiple pages to find enough matches in the requested city
+      const maxPagesToFetch = PAGINATION.MAX_PAGES_TO_FETCH; // Prevent infinite loops
+      const itemsPerPage = PAGINATION.DEFAULT_ITEMS_PER_PAGE;
+      
+      let allMatchingSetlists: any[] = [];
+      let currentPage = 1;
+      
+      logger.info('Starting multi-page search for city filtering', { 
+        artistName, 
+        cityName, 
+        requestedPage,
+        maxPagesToFetch 
+      });
+
+      // Fetch pages until we have enough results or hit our limit
+      while (currentPage <= maxPagesToFetch) {
+        try {
+          const response = await axios.get(
+            `${this.baseUrl}/search/setlists`,
+            {
+              headers: {
+                ...this.getHeaders(),
+                'Accept': 'application/json',
+              },
+              params: {
+                artistName,
+                p: currentPage,
+              },
+            }
+          );
+
+          const setlists = response.data.setlist || [];
+          
+          // Filter setlists for the target city
+          const cityMatches = setlists.filter((setlist: any) => {
+            const setlistCity = setlist.venue?.city?.name?.toLowerCase() || '';
+            return setlistCity.includes(cityName.toLowerCase());
+          });
+
+          allMatchingSetlists.push(...cityMatches);
+          
+          logger.info('Processed page in city search', {
+            currentPage,
+            totalSetlistsOnPage: setlists.length,
+            cityMatchesOnPage: cityMatches.length,
+            totalCityMatchesSoFar: allMatchingSetlists.length
+          });
+
+          // If we have enough results for the requested page, we can stop
+          const requiredItems = requestedPage * itemsPerPage;
+          if (allMatchingSetlists.length >= requiredItems || setlists.length < itemsPerPage) {
+            break;
+          }
+
+          currentPage++;
+        } catch (error: any) {
+          logger.warn('Error fetching page in city search', { 
+            currentPage, 
+            error: error.message 
+          });
+          break;
+        }
+      }
+
+      // Sort by date (newest first)
+      allMatchingSetlists.sort((a: any, b: any) => {
+        const parseDate = (dateStr: string) => {
+          const [day, month, year] = dateStr.split('-').map(Number);
+          return new Date(year, month - 1, day);
+        };
+        const dateA = parseDate(a.eventDate);
+        const dateB = parseDate(b.eventDate);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      // Paginate the filtered results
+      const startIndex = (requestedPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedItems = allMatchingSetlists.slice(startIndex, endIndex);
+
+      logger.info('Completed city-filtered search', {
+        artistName,
+        cityName,
+        totalMatchingSetlists: allMatchingSetlists.length,
+        requestedPage,
+        returnedItems: paginatedItems.length,
+        pagesFetched: currentPage - 1
+      });
+
+      return {
+        type: 'setlists',
+        itemsPerPage: itemsPerPage,
+        page: requestedPage,
+        total: allMatchingSetlists.length,
+        items: paginatedItems,
+      };
+    } catch (error: any) {
+      logger.error('Error in searchArtistWithCityFilter', { error: error.message, artistName, cityName });
+      throw error;
+    }
   }
 
   private async getSearchSuggestions(query: string): Promise<string[]> {
     try {
-      const response = await axios.get('https://www.setlist.fm/opensearch', {
+      const response = await axios.get(API_ENDPOINTS.SETLIST_FM.OPENSEARCH, {
         params: { query },
-        timeout: 5000,
+        timeout: TIMEOUTS.SETLIST_FM_API,
       });
       
       // Response format: [query, [suggestions]]
@@ -400,7 +539,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       if (artists.length === 0) {
         return {
           type: 'setlists',
-          itemsPerPage: 20,
+          itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
           page: page,
           total: 0,
           items: [],
@@ -412,7 +551,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       // Return empty results for any error (including 404)
       return {
         type: 'setlists',
-        itemsPerPage: 20,
+        itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
         page: page,
         total: 0,
         items: [],
@@ -440,7 +579,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       if (venues.length === 0) {
         return {
           type: 'setlists',
-          itemsPerPage: 20,
+          itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
           page: page,
           total: 0,
           items: [],
@@ -508,7 +647,7 @@ export class SetlistRepositoryImpl implements SetlistRepository {
       logger.error('Error searching by venue', { error: error.message, query });
       return {
         type: 'setlists',
-        itemsPerPage: 20,
+        itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
         page: page,
         total: 0,
         items: [],

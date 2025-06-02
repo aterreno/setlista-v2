@@ -36,7 +36,10 @@
       "Bash(grep:*)",
       "Bash(aws:*)",
       "Bash(npm run synth:*)",
-      "Bash(npm run deploy:*)"
+      "Bash(npm run deploy:*)",
+      "Bash(COMPOSE_BAKE=true docker compose up --build -d)",
+      "Bash(docker compose:*)",
+      "Bash(npm run test-coverage:*)"
     ]
   },
   "enableAllProjectMcpServers": false
