@@ -4,6 +4,10 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Configure React testing to use React.act instead of ReactDOMTestUtils.act
+import { configure } from '@testing-library/react';
+configure({ asyncUtilTimeout: 4000 });
+
 // Mock axios to avoid ESM issues
 jest.mock('axios', () => ({
   default: {

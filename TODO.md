@@ -1,4 +1,5 @@
 # Code quality todos:
+- codeQL should not look into tests 
 - add sonarcubbe, respect rules https://rules.sonarsource.com/typescript/ and add it to the PROJECT_RULES
 - add dev environment: it would break so many things with claude code
     [local, docker, dev, prod]

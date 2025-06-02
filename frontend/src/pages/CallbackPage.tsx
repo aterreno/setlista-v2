@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { API_CONFIG } from '../constants';
 
 const CallbackPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const CallbackPage: React.FC = () => {
 
       try {
         // Call the backend callback endpoint
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.setlista.terreno.dev/api'}/spotify/callback?code=${code}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL}/spotify/callback?code=${code}`);
         
         if (!response.ok) {
           throw new Error('Failed to exchange code for token');
