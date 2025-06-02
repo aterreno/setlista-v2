@@ -24,8 +24,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint . --ext .ts,.tsx",
-    "prepare": "husky"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "eslintConfig": {
     "extends": [
@@ -55,7 +54,7 @@
   },
   "engines": {
     "node": ">=18.20.5",
-    "npm": ">=10.9.2"
+    "npm": ">=10.8.0"
   },
   "overrides": {
     "cookie": ">=0.7.0",
