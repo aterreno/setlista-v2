@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Artist, SearchResult, Setlist, SpotifyPlaylist, SetlistWithSongs, HttpError } from '../types/index.ts';
+import { Artist, SearchResult, Setlist, SpotifyPlaylist, SetlistWithSongs, HttpError } from '../types';
 import { API_CONFIG } from '../constants';
 
 const API_URL = process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL;

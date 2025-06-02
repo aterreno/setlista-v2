@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage.tsx';
-import CallbackPage from './pages/CallbackPage.tsx';
+import HomePage from './pages/HomePage';
+import CallbackPage from './pages/CallbackPage';
 import './App.css';
 
 const App: React.FC = () => {

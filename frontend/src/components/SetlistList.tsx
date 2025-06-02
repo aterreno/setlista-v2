@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import { getArtistSetlists } from '../services/api.ts';
-import { Artist, Setlist } from '../types/index.ts';
-import { formatDate } from '../utils/formatters.ts';
+import { getArtistSetlists } from '../services/api';
+import { Artist, Setlist } from '../types';
+import { formatDate } from '../utils/formatters';
 
 interface SetlistListProps {
   artist: Artist;

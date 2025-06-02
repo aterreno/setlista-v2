@@ -23,3 +23,5 @@
 # Features todos:
 - add little map of the venue if possible (image)
 - add instagram shots (search for it, insta has api), search for venue/artist
+- The whole thing needs a better UX
+- The whole thing needs an explaination of why - relive a concert or 'prep' before going to a concert, if it's an artist that the user does not know well.

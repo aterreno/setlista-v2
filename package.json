@@ -11,7 +11,8 @@
     "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
     "lint-fix": "cd backend && npm run lint -- --fix && cd ../frontend && npm run lint -- --fix",
     "prepare": "husky",
-    "pre-commit-check": "npm run lint && npm run test && npm run test-coverage"
+    "pre-commit-check": "npm run typecheck && npm run lint && npm run test && npm run test-coverage",
+    "typecheck": "cd backend && npx tsc --noEmit && cd ../frontend && npx tsc --noEmit && cd ../infra && npx tsc --noEmit"
   },
   "repository": {
     "type": "git",

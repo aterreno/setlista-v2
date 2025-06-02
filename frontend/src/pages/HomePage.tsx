@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Setlist } from '../types/index.ts';
-import { useAuth } from '../hooks/useAuth.ts';
-import Header from '../components/Header.tsx';
-import ArtistSearch from '../components/ArtistSearch.tsx';
-import SetlistDetail from '../components/SetlistDetail.tsx';
+import { Setlist } from '../types';
+import { useAuth } from '../hooks/useAuth';
+import Header from '../components/Header';
+import ArtistSearch from '../components/ArtistSearch';
+import SetlistDetail from '../components/SetlistDetail';
 
 const queryClient = new QueryClient({
   defaultOptions: {

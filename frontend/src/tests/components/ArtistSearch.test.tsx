@@ -105,21 +105,27 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
           },
-          tour: { name: 'World Tour 2023' }
+          tour: { name: 'World Tour 2023' },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
         },
         {
           id: 'setlist2',
           eventDate: '15-06-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue2',
             name: 'Royal Albert Hall',
-            city: { name: 'London', country: { name: 'UK' } }
-          }
+            city: { id: 'city2', name: 'London', country: { code: 'GB', name: 'UK' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/royal-albert-hall-london-uk-2.html'
         }
       ]
     };
@@ -179,21 +185,27 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
           },
-          tour: { name: 'World Tour 2023' }
+          tour: { name: 'World Tour 2023' },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
         },
         {
           id: 'setlist2',
           eventDate: '15-06-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue2',
             name: 'Royal Albert Hall',
-            city: { name: 'London', country: { name: 'UK' } }
-          }
+            city: { id: 'city2', name: 'London', country: { code: 'GB', name: 'UK' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/royal-albert-hall-london-uk-2.html'
         }
       ]
     };
@@ -223,11 +235,14 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
-          }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
         }
       ]
     };
@@ -257,11 +272,14 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
-          }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
         }
       ]
     };
@@ -288,11 +306,14 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
-          }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
         }
       ]
     };
@@ -318,11 +339,14 @@ describe('ArtistSearch', () => {
       items: [{
         id: 'setlist1',
         eventDate: '31-12-2023',
-        artist: { name: 'Test Artist' },
+        artist: { id: 'artist2', name: 'Test Artist', sortName: 'Test Artist' },
         venue: {
+          id: 'venue3',
           name: 'Test Venue',
-          city: { name: 'Test City', country: { name: 'Test Country' } }
-        }
+          city: { id: 'city3', name: 'Test City', country: { code: 'TC', name: 'Test Country' } }
+        },
+        sets: { set: [] },
+        url: 'https://www.setlist.fm/setlist/test-artist/2023/test-venue-test-city-test-country-1.html'
       }]
     };
 
@@ -354,11 +378,14 @@ describe('ArtistSearch', () => {
       items: [{
         id: 'setlist1',
         eventDate: '31-12-2023',
-        artist: { name: 'Test Artist' },
+        artist: { id: 'artist2', name: 'Test Artist', sortName: 'Test Artist' },
         venue: {
+          id: 'venue3',
           name: 'Test Venue',
-          city: { name: 'Test City', country: { name: 'Test Country' } }
-        }
+          city: { id: 'city3', name: 'Test City', country: { code: 'TC', name: 'Test Country' } }
+        },
+        sets: { set: [] },
+        url: 'https://www.setlist.fm/setlist/test-artist/2023/test-venue-test-city-test-country-1.html'
       }]
     };
 
@@ -383,11 +410,14 @@ describe('ArtistSearch', () => {
       items: [{
         id: 'setlist1',
         eventDate: '31-12-2023',
-        artist: { name: 'Test Artist' },
+        artist: { id: 'artist2', name: 'Test Artist', sortName: 'Test Artist' },
         venue: {
+          id: 'venue3',
           name: 'Test Venue',
-          city: { name: 'Test City', country: { name: 'Test Country' } }
-        }
+          city: { id: 'city3', name: 'Test City', country: { code: 'TC', name: 'Test Country' } }
+        },
+        sets: { set: [] },
+        url: 'https://www.setlist.fm/setlist/test-artist/2023/test-venue-test-city-test-country-1.html'
       }]
     };
 
@@ -413,11 +443,14 @@ describe('ArtistSearch', () => {
         {
           id: 'setlist1',
           eventDate: '31-12-2023',
-          artist: { name: 'Radiohead' },
+          artist: { id: 'artist1', name: 'Radiohead', sortName: 'Radiohead' },
           venue: {
+            id: 'venue1',
             name: 'Madison Square Garden',
-            city: { name: 'New York', country: { name: 'USA' } }
-          }
+            city: { id: 'city1', name: 'New York', country: { code: 'US', name: 'USA' } }
+          },
+          sets: { set: [] },
+          url: 'https://www.setlist.fm/setlist/radiohead/2023/madison-square-garden-new-york-usa-1.html'
           // No tour field
         }
       ]

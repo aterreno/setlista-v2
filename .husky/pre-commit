@@ -3,9 +3,17 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run backend linting first
-echo "🔍 Linting backend..."
+# Run backend TypeScript compilation check
+echo "🔍 Checking backend TypeScript compilation..."
 cd backend
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+  echo "❌ Backend TypeScript compilation failed. Commit aborted."
+  exit 1
+fi
+
+# Run backend linting
+echo "🔍 Linting backend..."
 npm run lint
 if [ $? -ne 0 ]; then
   echo "❌ Backend linting failed. Commit aborted."
@@ -26,9 +34,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Run frontend linting and tests
-echo "🎨 Linting frontend..."
+# Run frontend TypeScript compilation check
+echo "🎨 Checking frontend TypeScript compilation..."
 cd ../frontend
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend TypeScript compilation failed. Commit aborted."
+  exit 1
+fi
+
+# Run frontend linting
+echo "🎨 Linting frontend..."
 npm run lint
 if [ $? -ne 0 ]; then
   echo "❌ Frontend linting failed. Commit aborted."
@@ -39,6 +55,15 @@ echo "🎨 Testing frontend..."
 npm test -- --watchAll=false
 if [ $? -ne 0 ]; then
   echo "❌ Frontend tests failed. Commit aborted."
+  exit 1
+fi
+
+# Run infra TypeScript compilation check
+echo "🏗️ Checking infra TypeScript compilation..."
+cd ../infra
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+  echo "❌ Infra TypeScript compilation failed. Commit aborted."
   exit 1
 fi
 

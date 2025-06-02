@@ -1,11 +1,10 @@
 import React from 'react';
 import { useQuery } from 'react-query';
-import { searchSetlists } from '../services/api.ts';
-import { Setlist } from '../types/index.ts';
-import { formatDate } from '../utils/formatters.ts';
-import { useDebounce } from '../hooks/useDebounce.ts';
+import { searchSetlists } from '../services/api';
+import { Setlist } from '../types';
+import { formatDate } from '../utils/formatters';
+import { useDebounce } from '../hooks/useDebounce';
 import { SEARCH_CONFIG } from '../constants';
-import { UI_TEXT, formatText } from '../constants/ui-text';
 
 interface ArtistSearchProps {
   onSelectSetlist: (setlist: Setlist) => void;

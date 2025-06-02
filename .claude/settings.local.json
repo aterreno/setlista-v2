@@ -39,7 +39,9 @@
       "Bash(npm run deploy:*)",
       "Bash(COMPOSE_BAKE=true docker compose up --build -d)",
       "Bash(docker compose:*)",
-      "Bash(npm run test-coverage:*)"
+      "Bash(npm run test-coverage:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run:*)"
     ]
   },
   "enableAllProjectMcpServers": false

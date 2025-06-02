@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AuthState } from '../types/index.ts';
+import { AuthState } from '../types';
 
 const TOKEN_STORAGE_KEY = 'spotify_auth';
 

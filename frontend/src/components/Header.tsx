@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from 'react-query';
-import { getSpotifyAuthUrl } from '../services/api.ts';
-import { AuthState } from '../types/index.ts';
+import { getSpotifyAuthUrl } from '../services/api';
+import { AuthState } from '../types';
 import logo from '../assets/logo.svg';
 
 interface HeaderProps {

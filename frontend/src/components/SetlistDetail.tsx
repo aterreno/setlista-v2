@@ -1,8 +1,8 @@
 import React from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { getSetlistById, createPlaylistFromSetlist } from '../services/api.ts';
-import { Setlist, Song, AuthState } from '../types/index.ts';
-import { formatDate } from '../utils/formatters.ts';
+import { getSetlistById, createPlaylistFromSetlist } from '../services/api';
+import { Setlist, Song, AuthState } from '../types';
+import { formatDate } from '../utils/formatters';
 
 interface SetlistDetailProps {
   setlistId: string;
