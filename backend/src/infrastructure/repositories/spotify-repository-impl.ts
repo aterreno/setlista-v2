@@ -5,12 +5,13 @@ import { API_ENDPOINTS, TIMEOUTS, SPOTIFY_CONFIG } from '../../constants';
 import logger from '../../utils/logger';
 
 export class SpotifyRepositoryImpl implements SpotifyRepository {
-  private readonly clientId = config.spotify.clientId;
-  private readonly clientSecret = config.spotify.clientSecret;
-  private readonly redirectUri = config.spotify.redirectUri;
   private readonly baseUrl = API_ENDPOINTS.SPOTIFY.BASE_URL;
   private readonly authUrl = API_ENDPOINTS.SPOTIFY.AUTH_URL;
   private readonly tokenUrl = API_ENDPOINTS.SPOTIFY.TOKEN_URL;
+
+  private get clientId() { return config.spotify.clientId; }
+  private get clientSecret() { return config.spotify.clientSecret; }
+  private get redirectUri() { return config.spotify.redirectUri; }
 
   getAuthorizationUrl(): string {
     const scopes = SPOTIFY_CONFIG.SCOPES;

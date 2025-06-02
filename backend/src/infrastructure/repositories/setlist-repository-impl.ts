@@ -6,8 +6,8 @@ import { API_ENDPOINTS, TIMEOUTS, PAGINATION, TEXT_FILTERS } from '../../constan
 import logger from '../../utils/logger';
 
 export class SetlistRepositoryImpl implements SetlistRepository {
-  private readonly baseUrl = config.setlistFm.baseUrl;
-  private readonly apiKey = config.setlistFm.apiKey;
+  private get baseUrl() { return config.setlistFm.baseUrl; }
+  private get apiKey() { return config.setlistFm.apiKey; }
 
   private getHeaders() {
     return {
