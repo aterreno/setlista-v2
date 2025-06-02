@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
     
     if (code && !authState.isAuthenticated) {
       // Process auth callback
-      fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/spotify/callback?code=${code}`)
+      fetch(`${process.env.REACT_APP_API_URL || 'https://api.setlista.terreno.dev/api'}/spotify/callback?code=${code}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

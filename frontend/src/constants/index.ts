@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  DEFAULT_BASE_URL: 'http://localhost:3001/api',
+  DEFAULT_BASE_URL: 'https://api.setlista.terreno.dev/api',
   TIMEOUT: 10000,
 } as const;
 

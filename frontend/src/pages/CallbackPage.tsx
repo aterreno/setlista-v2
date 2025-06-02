@@ -27,7 +27,7 @@ const CallbackPage: React.FC = () => {
 
       try {
         // Call the backend callback endpoint
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/spotify/callback?code=${code}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.setlista.terreno.dev/api'}/spotify/callback?code=${code}`);
         
         if (!response.ok) {
           throw new Error('Failed to exchange code for token');
