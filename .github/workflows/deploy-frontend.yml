@@ -38,9 +38,10 @@ jobs:
     - name: Build application
       run: npm run build
       env:
-        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-        REACT_APP_SPOTIFY_CLIENT_ID: ${{ secrets.REACT_APP_SPOTIFY_CLIENT_ID }}
-        REACT_APP_SPOTIFY_REDIRECT_URI: ${{ secrets.REACT_APP_SPOTIFY_REDIRECT_URI }}
+        REACT_APP_API_URL: https://api.setlista.terreno.dev/api
+        REACT_APP_SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+        REACT_APP_SPOTIFY_REDIRECT_URI: https://setlista.terreno.dev/api/spotify/callback
+
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
