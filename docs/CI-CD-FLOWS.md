@@ -154,7 +154,7 @@ CLOUDFRONT_DISTRIBUTION_ID=E221UO4Z4ENMNC
 - **Parallel Execution**: CI jobs run in parallel for faster feedback
 - **Smart Triggers**: Deployments only run when relevant code changes
 - **Caching**: npm dependencies cached across runs
-- **Node.js 18**: Consistent runtime across all workflows
+- **Node.js 22**: Consistent runtime across all workflows
 
 ## Security Best Practices
 

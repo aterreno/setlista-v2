@@ -47,6 +47,13 @@ export class SetlistaStack extends cdk.Stack {
       'setlista/spotify-client-secret'
     );
 
+
+    const spotifyRedirectUri = secretsmanager.Secret.fromSecretNameV2(
+      this, 
+      'SpotifyRedirectUri', 
+      'setlista/spotify-redirect-uri'
+    );
+
     // Create SSL certificate for custom domain
     const certificate = new certificatemanager.Certificate(this, 'SetlistaCertificate', {
       domainName: 'setlista.terreno.dev',
@@ -56,7 +63,7 @@ export class SetlistaStack extends cdk.Stack {
 
     // Create Lambda function for the backend
     const apiFunction = new lambda.Function(this, 'ApiFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'dist/lambda.lambdaHandler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend')),
       environment: {
@@ -71,6 +78,7 @@ export class SetlistaStack extends cdk.Stack {
     setlistFmApiKey.grantRead(apiFunction);
     spotifyClientId.grantRead(apiFunction);
     spotifyClientSecret.grantRead(apiFunction);
+    spotifyRedirectUri.grantRead(apiFunction);
 
     // Create API Gateway
     const api = new apigateway.RestApi(this, 'SetlistaApi', {

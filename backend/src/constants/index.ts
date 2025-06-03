@@ -73,7 +73,7 @@ export const AWS_CONFIG = {
   LAMBDA: {
     TIMEOUT_SECONDS: 30,
     MEMORY_SIZE: 256,
-    RUNTIME: 'nodejs18.x',
+    RUNTIME: 'nodejs22.x',
     LOG_RETENTION_DAYS: 7,
   },
 } as const;
@@ -94,7 +94,7 @@ export const DATE_FORMAT_OPTIONS = {
 
 // Coverage Thresholds (for testing)
 export const COVERAGE_THRESHOLDS = {
-  BRANCHES: 60,
+  BRANCHES: 80,
   FUNCTIONS: 80,
   LINES: 80,
   STATEMENTS: 80,

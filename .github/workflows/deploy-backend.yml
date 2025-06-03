@@ -20,7 +20,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: ./backend/package-lock.json
     
@@ -82,3 +82,4 @@ jobs:
         SETLIST_FM_API_KEY: ${{ secrets.SETLIST_FM_API_KEY }}
         SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
         SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        SPOTIFY_REDIRECT_URI: https://setlista.terreno.dev/api/spotify/callback 

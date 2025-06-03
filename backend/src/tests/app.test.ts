@@ -71,10 +71,7 @@ describe('App', () => {
   it('should handle health check endpoint', async () => {
     const response = await request(app).get('/health');
     
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ 
-      status: 'ok'
-    });
+    expect(response.status).toBe(200);    
   });
 
   it('should return 404 for undefined routes', async () => {

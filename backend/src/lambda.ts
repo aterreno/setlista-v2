@@ -17,7 +17,9 @@ export const lambdaHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     // Validate config (async in production to load secrets)
+    logger.info('About to validate config');
     await validateConfig();
+    logger.info('Configuration validated successfully');
 
     // Log the incoming request
     logger.info('Lambda invocation', {

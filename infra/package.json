@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "npm run build && cdk",
+    "deploy-2": "npm run build && cdk deploy",
     "deploy": "npm run build && cdk deploy --all",
     "synth": "npm run build && cdk synth",
     "diff": "npm run build && cdk diff",
@@ -35,7 +36,7 @@
     "source-map-support": "^0.5.21"
   },
   "engines": {
-    "node": ">=18.20.5",
+    "node": ">=22.0.0",
     "npm": ">=10.8.0"
   }
 }

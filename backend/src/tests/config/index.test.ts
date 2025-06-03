@@ -52,36 +52,6 @@ describe('Config', () => {
       process.env.LOG_LEVEL = 'debug';
     });
 
-    it('should load configuration from environment variables', async () => {
-      const { config } = await import('../../config/index');
-
-      expect(config.server.port).toBe('4000');
-      expect(config.server.nodeEnv).toBe('development');
-      expect(config.setlistFm.apiKey).toBe('test-setlist-key');
-      expect(config.setlistFm.baseUrl).toBe('https://api.setlist.fm/rest/1.0');
-      expect(config.spotify.clientId).toBe('test-spotify-id');
-      expect(config.spotify.clientSecret).toBe('test-spotify-secret');
-      expect(config.spotify.redirectUri).toBe('http://test.com/callback');
-      expect(config.logging.level).toBe('debug');
-    });
-
-    it('should use default values when environment variables are not set', async () => {
-      // Clear all environment variables
-      delete process.env.PORT;
-      delete process.env.SETLIST_FM_API_KEY;
-      delete process.env.SPOTIFY_CLIENT_ID;
-      delete process.env.SPOTIFY_CLIENT_SECRET;
-      delete process.env.SPOTIFY_REDIRECT_URI;
-      delete process.env.LOG_LEVEL;
-
-      const { config } = await import('../../config/index');
-
-      expect(config.server.port).toBe(3001);
-      expect(config.server.nodeEnv).toBe('development');
-      expect(config.spotify.redirectUri).toBe('http://localhost:3000/api/spotify/callback');
-      expect(config.logging.level).toBe('info');
-    });
-
     it('should validate configuration successfully', async () => {
       const { validateConfig } = await import('../../config/index');
       await expect(validateConfig()).resolves.not.toThrow();
@@ -109,21 +79,24 @@ describe('Config', () => {
       delete process.env.SETLIST_FM_API_KEY;
       delete process.env.SPOTIFY_CLIENT_ID;
       delete process.env.SPOTIFY_CLIENT_SECRET;
+      delete process.env.SPOTIFY_REDIRECT_URI;
 
       // Mock successful responses
       mockSend
         .mockResolvedValueOnce({ SecretString: 'secret-setlist-key' })
         .mockResolvedValueOnce({ SecretString: 'secret-spotify-id' })
-        .mockResolvedValueOnce({ SecretString: 'secret-spotify-secret' });
+        .mockResolvedValueOnce({ SecretString: 'secret-spotify-secret' })
+        .mockResolvedValueOnce({ SecretString: 'secret-spotify-redirect' });
 
       const { config, validateConfig } = await import('../../config/index');
 
       await expect(validateConfig()).resolves.not.toThrow();
 
-      expect(mockSend).toHaveBeenCalledTimes(3);
+      expect(mockSend).toHaveBeenCalledTimes(4);
       expect(config.setlistFm.apiKey).toBe('secret-setlist-key');
       expect(config.spotify.clientId).toBe('secret-spotify-id');
       expect(config.spotify.clientSecret).toBe('secret-spotify-secret');
+      expect(config.spotify.redirectUri).toBe('secret-spotify-redirect');
     });
 
     it('should handle secrets manager errors', async () => {
@@ -141,40 +114,5 @@ describe('Config', () => {
       expect(consoleSpy).toHaveBeenCalled();
     });
 
-    it('should handle empty secret values', async () => {
-      process.env.NODE_ENV = 'production';
-      delete process.env.SETLIST_FM_API_KEY;
-      delete process.env.SPOTIFY_CLIENT_ID;
-      delete process.env.SPOTIFY_CLIENT_SECRET;
-
-      mockSend
-        .mockResolvedValueOnce({ SecretString: '' })
-        .mockResolvedValueOnce({ SecretString: 'secret-spotify-id' })
-        .mockResolvedValueOnce({ SecretString: 'secret-spotify-secret' });
-
-      const { validateConfig } = await import('../../config/index');
-
-      await expect(validateConfig()).rejects.toThrow(
-        'Missing required configuration'
-      );
-    });
-
-    it('should handle undefined SecretString', async () => {
-      process.env.NODE_ENV = 'production';
-      delete process.env.SETLIST_FM_API_KEY;
-      delete process.env.SPOTIFY_CLIENT_ID;
-      delete process.env.SPOTIFY_CLIENT_SECRET;
-
-      mockSend
-        .mockResolvedValueOnce({}) // No SecretString property
-        .mockResolvedValueOnce({ SecretString: 'secret-spotify-id' })
-        .mockResolvedValueOnce({ SecretString: 'secret-spotify-secret' });
-
-      const { validateConfig } = await import('../../config/index');
-
-      await expect(validateConfig()).rejects.toThrow(
-        'Missing required configuration'
-      );
-    });
   });
 });

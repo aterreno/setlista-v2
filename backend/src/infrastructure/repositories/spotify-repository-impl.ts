@@ -16,12 +16,11 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
   getAuthorizationUrl(): string {
     const scopes = SPOTIFY_CONFIG.SCOPES;
 
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      response_type: 'code',
-      redirect_uri: this.redirectUri,
-      scope: scopes.join(' '),
-    });
+    const params = new URLSearchParams();
+    params.append('client_id', this.clientId ?? '');
+    params.append('response_type', 'code');
+    params.append('redirect_uri', this.redirectUri ?? '');
+    params.append('scope', scopes.join(' '));
 
     return `${this.authUrl}?${params.toString()}`;
   }
@@ -35,7 +34,7 @@ export class SpotifyRepositoryImpl implements SpotifyRepository {
       const params = new URLSearchParams();
       params.append('grant_type', 'authorization_code');
       params.append('code', code);
-      params.append('redirect_uri', this.redirectUri);
+      params.append('redirect_uri', this.redirectUri ?? '');
 
       const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString(
         'base64'
