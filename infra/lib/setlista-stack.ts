@@ -8,6 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as kinesis from 'aws-cdk-lib/aws-kinesis';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
@@ -89,8 +90,22 @@ export class SetlistaStack extends cdk.Stack {
         dataTraceEnabled: true,
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowOrigins: ['https://setlista.terreno.dev'],
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+          'Origin',
+          'Accept',
+          'Access-Control-Allow-Origin',
+          'Access-Control-Allow-Headers',
+          'Access-Control-Allow-Methods',
+        ],
+        allowCredentials: true,
+        maxAge: cdk.Duration.days(1),
       },
     });
 
@@ -99,8 +114,48 @@ export class SetlistaStack extends cdk.Stack {
     
     // Add proxy resource to Lambda
     const proxyResource = apiResource.addProxy({
-      defaultIntegration: new apigateway.LambdaIntegration(apiFunction),
+      defaultIntegration: new apigateway.LambdaIntegration(apiFunction, {
+        proxy: true,
+        integrationResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': "'https://setlista.terreno.dev'",
+              'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin,Accept'",
+              'method.response.header.Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+            },
+          },
+        ],
+      }),
       anyMethod: true,
+      defaultMethodOptions: {
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+              'method.response.header.Access-Control-Allow-Headers': true,
+              'method.response.header.Access-Control-Allow-Methods': true,
+            },
+          },
+          {
+            statusCode: '400',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+              'method.response.header.Access-Control-Allow-Headers': true,
+              'method.response.header.Access-Control-Allow-Methods': true,
+            },
+          },
+          {
+            statusCode: '500',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+              'method.response.header.Access-Control-Allow-Headers': true,
+              'method.response.header.Access-Control-Allow-Methods': true,
+            },
+          },
+        ],
+      },
     });
 
     // Now create CloudFront distribution after API Gateway is defined
@@ -116,14 +171,18 @@ export class SetlistaStack extends cdk.Stack {
       },
       additionalBehaviors: {
         '/api/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
         },
         '/auth/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
@@ -154,6 +213,80 @@ export class SetlistaStack extends cdk.Stack {
 
     frontendBucket.addToResourcePolicy(bucketPolicyStatement);
 
+    // Create Kinesis stream for real-time logs
+    const realTimeLogStream = new kinesis.Stream(this, 'ApiCloudFrontRealTimeLogs', {
+      streamMode: kinesis.StreamMode.ON_DEMAND,
+      retentionPeriod: cdk.Duration.hours(24),
+    });
+
+    // Create IAM role for CloudFront to write to Kinesis
+    const realTimeLogRole = new iam.Role(this, 'ApiCloudFrontRealTimeLogRole', {
+      assumedBy: new iam.ServicePrincipal('cloudfront.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ],
+      inlinePolicies: {
+        KinesisWrite: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                'kinesis:DescribeStreamSummary',
+                'kinesis:DescribeStream',
+                'kinesis:PutRecord',
+                'kinesis:PutRecords',
+              ],
+              resources: [realTimeLogStream.streamArn],
+            }),
+          ],
+        }),
+      },
+    });
+
+    // Create real-time log configuration
+    const realTimeLogConfig = new cloudfront.CfnRealtimeLogConfig(this, 'ApiCloudFrontRealTimeLogConfig', {
+      name: 'ApiCloudFrontRealTimeLogs',
+      samplingRate: 100, // Log 100% of requests
+      fields: [
+        'timestamp',
+        'c-ip',
+        'time-to-first-byte',
+        'sc-status',
+        'sc-bytes',
+        'cs-method',
+        'cs-protocol',
+        'cs-host',
+        'cs-protocol-version',
+        'cs-user-agent',
+        'cs-referer',
+        'cs-cookie',
+        'x-edge-location',
+        'x-edge-request-id',
+        'x-host-header',
+        'cs-uri-stem',
+        'cs-uri-query',
+        'sc-content-type',
+        'sc-content-len',
+        'sc-range-start',
+        'sc-range-end',
+        'c-port',
+        'time-taken',
+        'x-forwarded-for',
+        'ssl-protocol',
+        'ssl-cipher',
+        'x-edge-response-result-type',
+        'x-edge-detailed-result-type',
+        'fle-status',
+        'fle-encrypted-fields'
+      ],
+      endPoints: [{
+        streamType: 'Kinesis',
+        kinesisStreamConfig: {
+          streamArn: realTimeLogStream.streamArn,
+          roleArn: realTimeLogRole.roleArn,
+        },
+      }],
+    });
+
     // Create a separate CloudFront distribution for the API subdomain
     const apiDistribution = new cloudfront.Distribution(this, 'ApiDistribution', {
       comment: 'Setlista API CloudFront Distribution',
@@ -164,8 +297,96 @@ export class SetlistaStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-        originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+        responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        functionAssociations: [
+          {
+            function: new cloudfront.Function(this, 'QueryStringFunction', {
+              code: cloudfront.FunctionCode.fromInline(`
+                function handler(event) {
+                  var request = event.request;
+                  var uri = request.uri;
+                  
+                  // Remove /prod prefix if present
+                  if (uri.startsWith('/prod/')) {
+                    request.uri = uri.substring(5);
+                  }
+                  
+                  // Forward all query parameters
+                  if (request.querystring) {
+                    request.querystring = request.querystring;
+                  }
+                  
+                  // Add CORS headers for preflight requests
+                  if (request.method === 'OPTIONS') {
+                    return {
+                      statusCode: 204,
+                      statusDescription: 'No Content',
+                      headers: {
+                        'access-control-allow-origin': { value: 'https://setlista.terreno.dev' },
+                        'access-control-allow-methods': { value: 'GET,HEAD,OPTIONS,POST,PUT' },
+                        'access-control-allow-headers': { value: 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin,Accept' },
+                        'access-control-max-age': { value: '86400' }
+                      }
+                    };
+                  }
+                  
+                  return request;
+                }
+              `),
+            }),
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
+      additionalBehaviors: {
+        '/api/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+        '/auth/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+        '/prod/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+        '/spotify/*': {
+          origin: new origins.RestApiOrigin(api),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+      },
+      logBucket: new s3.Bucket(this, 'ApiCloudFrontLogs', {
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        versioned: true,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        lifecycleRules: [
+          {
+            expiration: cdk.Duration.days(90), // Keep logs for 90 days
+          },
+        ],
+      }),
+      logFilePrefix: 'api-cloudfront-logs/',
+      logIncludesCookies: true,
     });
 
     // Output the CloudFront domain so SPOTIFY_REDIRECT_URI can be configured manually if needed

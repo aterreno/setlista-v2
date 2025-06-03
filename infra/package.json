@@ -9,7 +9,6 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "npm run build && cdk",
-    "deploy-2": "npm run build && cdk deploy",
     "deploy": "npm run build && cdk deploy --all",
     "synth": "npm run build && cdk synth",
     "diff": "npm run build && cdk diff",
