@@ -66,9 +66,6 @@ async function loadSecrets() {
       } else {
         console.warn('setlista/spotify-redirect-uri secret is empty or missing, using fallback:', config.spotify.redirectUri);
       }
-      console.info('Configuration secrets loaded successfully, spotify config:',
-        JSON.stringify(config.spotify, null, 2)
-      );
     } catch (error) {
       console.error('Error loading secrets:', error);
       throw error;
