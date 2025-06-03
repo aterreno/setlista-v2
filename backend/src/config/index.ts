@@ -23,7 +23,6 @@ async function getSecret(secretName: string): Promise<string | undefined> {
     const secretsClient = new SecretsManagerClient({ region: config.aws.region });
     const command = new GetSecretValueCommand({ SecretId: secretName });
     const response = await secretsClient.send(command);
-    console.info(`Retrieved secret ${secretName} successfully with value`, response?.SecretString);
     return response?.SecretString;
   } catch (error) {
     console.error(`Error retrieving secret ${secretName}:`, error);
@@ -55,19 +54,15 @@ const config = {
 };
 
 // Load secrets from AWS Secrets Manager in production
-async function loadSecrets() {
-  console.info('Loading configuration secrets... IsProduction:', isProduction);
+async function loadSecrets() {  
   if (isProduction) {
     try {
       config.setlistFm.apiKey = await getSecret('setlista/setlistfm-api-key');
       config.spotify.clientId = await getSecret('setlista/spotify-client-id');
       config.spotify.clientSecret = await getSecret('setlista/spotify-client-secret');
-      console.info('Fetching setlista/spotify-redirect-uri from Secrets Manager...');
       const redirectUriSecret = await getSecret('setlista/spotify-redirect-uri');
-      console.info('Fetched setlista/spotify-redirect-uri:', redirectUriSecret);
       if (redirectUriSecret) {
         config.spotify.redirectUri = redirectUriSecret;
-        console.info('config.spotify.redirectUri after assignment:', config.spotify.redirectUri);
       } else {
         console.warn('setlista/spotify-redirect-uri secret is empty or missing, using fallback:', config.spotify.redirectUri);
       }

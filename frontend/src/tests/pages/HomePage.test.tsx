@@ -212,7 +212,7 @@ describe('HomePage', () => {
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/spotify/callback?code=spotify-auth-code'
+        '/api/spotify/callback?code=spotify-auth-code'
       );
     });
 

@@ -11,17 +11,10 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ authState, onLogout, onHomeClick }) => {
-  const { data, isLoading, error } = useQuery('spotifyAuthUrl', getSpotifyAuthUrl, {
+  const { data } = useQuery('spotifyAuthUrl', getSpotifyAuthUrl, {
     enabled: !authState.isAuthenticated,
     staleTime: Infinity,
   });
-
-  // Debug logging
-  console.log('Header render - authState:', authState);
-  console.log('Header render - useQuery data:', data);
-  console.log('Header render - useQuery isLoading:', isLoading);
-  console.log('Header render - useQuery error:', error);
-
   return (
     <header className="app-header">
       <div className="app-title">
@@ -40,11 +33,13 @@ const Header: React.FC<HeaderProps> = ({ authState, onLogout, onHomeClick }) => 
             Logout from Spotify
           </button>
         ) : (
-          data && (
-            <a href={data.authUrl} className="spotify-login-button">
-              Login with Spotify
-            </a>
-          )
+          <>
+            {data && (
+              <a href={data.authUrl} className="spotify-login-button">
+                Login with Spotify
+              </a>
+            )}            
+          </>
         )}
       </div>
     </header>

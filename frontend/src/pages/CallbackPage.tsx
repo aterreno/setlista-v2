@@ -36,7 +36,7 @@ const CallbackPage: React.FC = () => {
       console.error('CallbackPage: Error calling login function:', e);
     }
     navigate('/?success=logged_in');
-  }, [location.search, login, navigate]);
+  }, [location.search, location.hash, urlParams, login, navigate]);
 
   // Simplified return for testing
   return (

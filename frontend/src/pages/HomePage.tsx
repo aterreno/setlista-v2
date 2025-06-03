@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth';
 import Header from '../components/Header';
 import ArtistSearch from '../components/ArtistSearch';
 import SetlistDetail from '../components/SetlistDetail';
-import { API_CONFIG } from '../constants';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,7 +47,7 @@ const HomePage: React.FC = () => {
     // Handle direct Spotify code (this is the old flow, likely not used anymore)
     if (code && !authState.isAuthenticated) {
       // Process auth callback
-      fetch(`${process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL}/spotify/callback?code=${code}`)
+      fetch(`${process.env.REACT_APP_API_URL}/spotify/callback?code=${code}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

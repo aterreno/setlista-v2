@@ -15,20 +15,8 @@ export const lambdaHandler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  try {
-    // Validate config (async in production to load secrets)
-    logger.info('About to validate config');
+  try {    
     await validateConfig();
-    logger.info('Configuration validated successfully');
-
-    // Log the incoming request
-    logger.info('Lambda invocation', {
-      requestId: context.awsRequestId,
-      path: event.path,
-      method: event.httpMethod,
-      queryStringParameters: event.queryStringParameters,
-      multiValueQueryStringParameters: event.multiValueQueryStringParameters,
-    });
 
     // Handle the request with the Express app
     return await handler(event, context) as APIGatewayProxyResult;

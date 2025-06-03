@@ -2,10 +2,8 @@ import axios from 'axios';
 import { Artist, SearchResult, Setlist, SpotifyPlaylist, SetlistWithSongs, HttpError } from '../types';
 import { API_CONFIG } from '../constants';
 
-const API_URL = process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL;
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: process.env.REACT_APP_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
