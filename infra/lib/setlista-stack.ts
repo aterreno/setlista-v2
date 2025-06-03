@@ -95,7 +95,7 @@ export class SetlistaStack extends cdk.Stack {
     });
 
     // Create API Gateway resources
-    const apiResource = api.root.addResource('api');
+    const apiResource = api.root;
     
     // Add proxy resource to Lambda
     const proxyResource = apiResource.addProxy({

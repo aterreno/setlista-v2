@@ -40,14 +40,20 @@ const CallbackPage: React.FC = () => {
           // Login with the received token
           login(data.access_token, data.expires_in);
           
-          // Redirect to home page
+          // Redirect to home page with success message
           navigate('/?success=logged_in');
         } else {
           throw new Error('Invalid token response');
         }
       } catch (error) {
         console.error('Error handling Spotify callback:', error);
-        navigate('/?error=token_exchange_failed');
+        // Only navigate to error URL if we haven't already logged in
+        if (!localStorage.getItem('spotify_auth')) {
+          navigate('/?error=token_exchange_failed');
+        } else {
+          // If we have a token, just redirect to home
+          navigate('/');
+        }
       }
     };
 
