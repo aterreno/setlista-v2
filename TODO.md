@@ -3,7 +3,7 @@
 - add sonarcubbe, respect rules https://rules.sonarsource.com/typescript/ and add it to the PROJECT_RULES
 - add dev environment: it would break so many things with claude code
     [local, docker, dev, prod]
-- add end to end tests to promote dev to prod, i.e. search for an artist with end2end tooling
+- add end to end tests to promote dev to prod, i.e. search for an artist with end2end tooling and spotify login
 - Improve test coverage:
   src/infrastructure/repositories |   64.85 |    36.03 |   66.66 |   66.37 |
   setlist-repository-impl.ts     |   57.36 |    36.03 |   58.62 |   58.82 | 94,121-122,133-146,163-175,206-217,224-228,251-305,321,364,375-378,401,441,453-466,486-492
