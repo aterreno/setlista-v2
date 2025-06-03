@@ -8,11 +8,22 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as kinesis from 'aws-cdk-lib/aws-kinesis';
+
 import * as path from 'path';
 import { Construct } from 'constructs';
 
 export class SetlistaStack extends cdk.Stack {
+  // Custom OriginRequestPolicy for API Gateway (no Host header)
+  private createApiGatewayOriginRequestPolicy(scope: Construct): cloudfront.OriginRequestPolicy {
+    return new cloudfront.OriginRequestPolicy(scope, 'ApiGatewayOriginRequestPolicy', {
+      originRequestPolicyName: 'SetlistaApiGatewayOriginRequestPolicy',
+      comment: 'Policy for CloudFront -> API Gateway (do NOT forward Host header)',
+      headerBehavior: cloudfront.OriginRequestHeaderBehavior.none(), // DO NOT forward Host
+      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+      cookieBehavior: cloudfront.OriginRequestCookieBehavior.all(),
+    });
+  }
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -159,6 +170,9 @@ export class SetlistaStack extends cdk.Stack {
     });
 
     // Now create CloudFront distribution after API Gateway is defined
+    // Create custom OriginRequestPolicy for API Gateway
+    const apiGatewayOriginRequestPolicy = this.createApiGatewayOriginRequestPolicy(this);
+
     distribution = new cloudfront.Distribution(this, 'DistributionV3', {
       comment: 'Setlista CloudFront Distribution v2',
       domainNames: ['setlista.terreno.dev'],
@@ -177,7 +191,7 @@ export class SetlistaStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
         },
         '/auth/*': {
           origin: new origins.RestApiOrigin(api, {
@@ -186,7 +200,7 @@ export class SetlistaStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
         },
       },
       defaultRootObject: 'index.html',
@@ -213,80 +227,6 @@ export class SetlistaStack extends cdk.Stack {
 
     frontendBucket.addToResourcePolicy(bucketPolicyStatement);
 
-    // Create Kinesis stream for real-time logs
-    const realTimeLogStream = new kinesis.Stream(this, 'ApiCloudFrontRealTimeLogs', {
-      streamMode: kinesis.StreamMode.ON_DEMAND,
-      retentionPeriod: cdk.Duration.hours(24),
-    });
-
-    // Create IAM role for CloudFront to write to Kinesis
-    const realTimeLogRole = new iam.Role(this, 'ApiCloudFrontRealTimeLogRole', {
-      assumedBy: new iam.ServicePrincipal('cloudfront.amazonaws.com'),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-      ],
-      inlinePolicies: {
-        KinesisWrite: new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              actions: [
-                'kinesis:DescribeStreamSummary',
-                'kinesis:DescribeStream',
-                'kinesis:PutRecord',
-                'kinesis:PutRecords',
-              ],
-              resources: [realTimeLogStream.streamArn],
-            }),
-          ],
-        }),
-      },
-    });
-
-    // Create real-time log configuration
-    const realTimeLogConfig = new cloudfront.CfnRealtimeLogConfig(this, 'ApiCloudFrontRealTimeLogConfig', {
-      name: 'ApiCloudFrontRealTimeLogs',
-      samplingRate: 100, // Log 100% of requests
-      fields: [
-        'timestamp',
-        'c-ip',
-        'time-to-first-byte',
-        'sc-status',
-        'sc-bytes',
-        'cs-method',
-        'cs-protocol',
-        'cs-host',
-        'cs-protocol-version',
-        'cs-user-agent',
-        'cs-referer',
-        'cs-cookie',
-        'x-edge-location',
-        'x-edge-request-id',
-        'x-host-header',
-        'cs-uri-stem',
-        'cs-uri-query',
-        'sc-content-type',
-        'sc-content-len',
-        'sc-range-start',
-        'sc-range-end',
-        'c-port',
-        'time-taken',
-        'x-forwarded-for',
-        'ssl-protocol',
-        'ssl-cipher',
-        'x-edge-response-result-type',
-        'x-edge-detailed-result-type',
-        'fle-status',
-        'fle-encrypted-fields'
-      ],
-      endPoints: [{
-        streamType: 'Kinesis',
-        kinesisStreamConfig: {
-          streamArn: realTimeLogStream.streamArn,
-          roleArn: realTimeLogRole.roleArn,
-        },
-      }],
-    });
-
     // Create a separate CloudFront distribution for the API subdomain
     const apiDistribution = new cloudfront.Distribution(this, 'ApiDistribution', {
       comment: 'Setlista API CloudFront Distribution',
@@ -297,7 +237,7 @@ export class SetlistaStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+        originRequestPolicy: apiGatewayOriginRequestPolicy,
         responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         functionAssociations: [
           {
@@ -341,35 +281,47 @@ export class SetlistaStack extends cdk.Stack {
       },
       additionalBehaviors: {
         '/api/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+            
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
           responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         },
         '/auth/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+            
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
           responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         },
         '/prod/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+            
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
           responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         },
         '/spotify/*': {
-          origin: new origins.RestApiOrigin(api),
+          origin: new origins.RestApiOrigin(api, {
+            originPath: '/prod',
+            
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+          originRequestPolicy: apiGatewayOriginRequestPolicy,
           responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         },
       },
