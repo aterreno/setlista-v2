@@ -33,7 +33,7 @@ jobs:
     - name: Run tests
       run: npm test -- --watchAll=false
       env:
-        REACT_APP_API_URL: http://localhost:3001/api
+        REACT_APP_API_URL: /api
     
     - name: Build application
       run: npm run build
