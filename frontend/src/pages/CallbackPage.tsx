@@ -1,37 +1,44 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { API_CONFIG } from '../constants';
 
 const CallbackPage: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [, login] = useAuth();
+  
+  // Process URL parameters from either query string or hash fragment
+  const urlParams = new URLSearchParams(location.search || location.hash.split('?')[1] || '');
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
+    console.log('CallbackPage: useEffect triggered. Location:', location.search, location.hash);
     const accessToken = urlParams.get('access_token');
     const expiresIn = urlParams.get('expires_in');
     const error = urlParams.get('error');
 
     if (error) {
-      console.error('Spotify auth error:', error);
+      console.error('CallbackPage: Spotify auth error:', error);
       navigate('/?error=auth_failed');
       return;
     }
 
     if (!accessToken || !expiresIn) {
-      console.error('Missing access token or expiry');
+      console.error('CallbackPage: Missing access token or expiry.');
       navigate('/?error=token_missing');
       return;
     }
 
-    // Login with the received token
-    login(accessToken, Number(expiresIn));
-    // Redirect to home page with success message
+    console.log('CallbackPage: Tokens found - AccessToken:', accessToken, 'ExpiresIn:', expiresIn);
+    try {
+      login(accessToken, Number(expiresIn));
+      console.log('CallbackPage: login function called successfully.');
+    } catch (e) {
+      console.error('CallbackPage: Error calling login function:', e);
+    }
     navigate('/?success=logged_in');
   }, [location.search, login, navigate]);
 
+  // Simplified return for testing
   return (
     <div style={{ 
       display: 'flex', 

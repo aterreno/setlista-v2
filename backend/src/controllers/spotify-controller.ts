@@ -39,7 +39,7 @@ export class SpotifyController {
       const isProd = process.env.NODE_ENV === 'production' || (config && config.server && config.server.nodeEnv === 'production');
       const frontendBaseUrl = isProd ? 'https://setlista.terreno.dev' : 'http://localhost:3000';
       // Redirect to frontend callback page with tokens as query params
-      const redirectUrl = `${frontendBaseUrl}/callback?access_token=${encodeURIComponent(tokenData.access_token)}&expires_in=${encodeURIComponent(tokenData.expires_in)}`;
+      const redirectUrl = `${frontendBaseUrl}/#/callback?access_token=${encodeURIComponent(tokenData.access_token)}&expires_in=${encodeURIComponent(tokenData.expires_in)}`;
       res.redirect(302, redirectUrl);
     } catch (error: unknown) {
       const httpError = error as HttpError;

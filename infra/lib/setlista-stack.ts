@@ -205,6 +205,16 @@ export class SetlistaStack extends cdk.Stack {
     // Create custom OriginRequestPolicy for API Gateway
     const apiGatewayOriginRequestPolicy = this.createApiGatewayOriginRequestPolicy(this);
 
+    // Route /api/* from the frontend distribution (setlista.terreno.dev) to the API Gateway
+    // This ensures that the main domain's /api/* paths are handled by the backend.
+    distribution.addBehavior('/api/*', new origins.RestApiOrigin(api), {
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+      cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      originRequestPolicy: apiGatewayOriginRequestPolicy, // Uses the policy defined above
+      responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT, // Standard CORS policy with preflight
+    });
+
     // Grant CloudFront permission to access the S3 bucket
     const bucketPolicyStatement = new iam.PolicyStatement({
       actions: ['s3:GetObject'],
@@ -242,11 +252,6 @@ export class SetlistaStack extends cdk.Stack {
                   // Remove /prod prefix if present
                   if (uri.startsWith('/prod/')) {
                     request.uri = uri.substring(5);
-                  }
-                  
-                  // Forward all query parameters
-                  if (request.querystring) {
-                    request.querystring = request.querystring;
                   }
                   
                   // Add CORS headers for preflight requests

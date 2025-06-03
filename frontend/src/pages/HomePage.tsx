@@ -24,11 +24,28 @@ const HomePage: React.FC = () => {
   const [searchPage, setSearchPage] = useState(1);
   const location = useLocation();
 
-  // Handle Spotify auth callback
+  // Handle URL parameters, including success and error messages from callback
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const success = params.get('success');
+    const error = params.get('error');
     const code = params.get('code');
     
+    // Handle success message from callback
+    if (success === 'logged_in') {
+      console.log('Successfully authenticated with Spotify');
+      // Clear the URL params but keep the user on homepage
+      window.history.replaceState({}, document.title, '/');
+    }
+    
+    // Handle error messages
+    if (error) {
+      console.error(`Auth error: ${error}`);
+      // Could show a toast or notification here
+      window.history.replaceState({}, document.title, '/');
+    }
+    
+    // Handle direct Spotify code (this is the old flow, likely not used anymore)
     if (code && !authState.isAuthenticated) {
       // Process auth callback
       fetch(`${process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL}/spotify/callback?code=${code}`)
