@@ -26,6 +26,8 @@ export const lambdaHandler = async (
       requestId: context.awsRequestId,
       path: event.path,
       method: event.httpMethod,
+      queryStringParameters: event.queryStringParameters,
+      multiValueQueryStringParameters: event.multiValueQueryStringParameters,
     });
 
     // Handle the request with the Express app
