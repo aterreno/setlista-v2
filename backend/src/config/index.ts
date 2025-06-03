@@ -62,9 +62,15 @@ async function loadSecrets() {
       config.setlistFm.apiKey = await getSecret('setlista/setlistfm-api-key');
       config.spotify.clientId = await getSecret('setlista/spotify-client-id');
       config.spotify.clientSecret = await getSecret('setlista/spotify-client-secret');
-      console.info('config.spotify.redirectUri',config.spotify.redirectUri);
-      config.spotify.redirectUri = await getSecret('setlista/spotify-redirect-uri');
-      console.info('config.spotify.redirectUri',config.spotify.redirectUri);
+      console.info('Fetching setlista/spotify-redirect-uri from Secrets Manager...');
+      const redirectUriSecret = await getSecret('setlista/spotify-redirect-uri');
+      console.info('Fetched setlista/spotify-redirect-uri:', redirectUriSecret);
+      if (redirectUriSecret) {
+        config.spotify.redirectUri = redirectUriSecret;
+        console.info('config.spotify.redirectUri after assignment:', config.spotify.redirectUri);
+      } else {
+        console.warn('setlista/spotify-redirect-uri secret is empty or missing, using fallback:', config.spotify.redirectUri);
+      }
       console.info('Configuration secrets loaded successfully, spotify config:',
         JSON.stringify(config.spotify, null, 2)
       );

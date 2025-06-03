@@ -9,55 +9,27 @@ const CallbackPage: React.FC = () => {
   const [, login] = useAuth();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const urlParams = new URLSearchParams(location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
+    const urlParams = new URLSearchParams(location.search);
+    const accessToken = urlParams.get('access_token');
+    const expiresIn = urlParams.get('expires_in');
+    const error = urlParams.get('error');
 
-      if (error) {
-        console.error('Spotify auth error:', error);
-        navigate('/?error=auth_failed');
-        return;
-      }
+    if (error) {
+      console.error('Spotify auth error:', error);
+      navigate('/?error=auth_failed');
+      return;
+    }
 
-      if (!code) {
-        console.error('No authorization code received');
-        navigate('/?error=no_code');
-        return;
-      }
+    if (!accessToken || !expiresIn) {
+      console.error('Missing access token or expiry');
+      navigate('/?error=token_missing');
+      return;
+    }
 
-      try {
-        // Call the backend callback endpoint
-        const response = await fetch(`${process.env.REACT_APP_API_URL || API_CONFIG.DEFAULT_BASE_URL}/spotify/callback?code=${code}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to exchange code for token');
-        }
-
-        const data = await response.json();
-        
-        if (data.access_token && data.expires_in) {
-          // Login with the received token
-          login(data.access_token, data.expires_in);
-          
-          // Redirect to home page with success message
-          navigate('/?success=logged_in');
-        } else {
-          throw new Error('Invalid token response');
-        }
-      } catch (error) {
-        console.error('Error handling Spotify callback:', error);
-        // Only navigate to error URL if we haven't already logged in
-        if (!localStorage.getItem('spotify_auth')) {
-          navigate('/?error=token_exchange_failed');
-        } else {
-          // If we have a token, just redirect to home
-          navigate('/');
-        }
-      }
-    };
-
-    handleCallback();
+    // Login with the received token
+    login(accessToken, Number(expiresIn));
+    // Redirect to home page with success message
+    navigate('/?success=logged_in');
   }, [location.search, login, navigate]);
 
   return (

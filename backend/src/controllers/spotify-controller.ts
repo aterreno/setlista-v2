@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { SpotifyService } from '../domain/services/spotify-service';
 import { SetlistService } from '../domain/services/setlist-service';
 import { HttpError } from '../domain/types';
+import { config } from '../config';
 import logger from '../utils/logger';
 
 export class SpotifyController {
@@ -34,10 +35,12 @@ export class SpotifyController {
       
       // In a real application, you would store these tokens securely
       // For this demo, we'll send them back to the client
-      res.json({
-        access_token: tokenData.access_token,
-        expires_in: tokenData.expires_in,
-      });
+      // Determine frontend base URL
+      const isProd = process.env.NODE_ENV === 'production' || (config && config.server && config.server.nodeEnv === 'production');
+      const frontendBaseUrl = isProd ? 'https://setlista.terreno.dev' : 'http://localhost:3000';
+      // Redirect to frontend callback page with tokens as query params
+      const redirectUrl = `${frontendBaseUrl}/callback?access_token=${encodeURIComponent(tokenData.access_token)}&expires_in=${encodeURIComponent(tokenData.expires_in)}`;
+      res.redirect(302, redirectUrl);
     } catch (error: unknown) {
       const httpError = error as HttpError;
       logger.error('Error in handleCallback controller', { error: httpError });

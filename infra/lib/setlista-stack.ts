@@ -31,14 +31,21 @@ export class SetlistaStack extends cdk.Stack {
     const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html', // SPA routing
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      publicReadAccess: true,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: false,
+        ignorePublicAcls: false,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev/test environments
       autoDeleteObjects: true, // For dev/test environments
     });
 
     // CloudFront distribution for the frontend (will be created after API Gateway)
     let distribution: cloudfront.Distribution;
+
+
 
     // Import existing secrets
     const setlistFmApiKey = secretsmanager.Secret.fromSecretNameV2(
@@ -73,6 +80,31 @@ export class SetlistaStack extends cdk.Stack {
       validation: certificatemanager.CertificateValidation.fromDns(),
     });
 
+    // CloudFront distribution for the frontend (SPA routing)
+    distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
+      defaultBehavior: {
+        origin: new origins.S3StaticWebsiteOrigin(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+      ],      
+      domainNames: ['setlista.terreno.dev'],
+      certificate: certificate,
+    });
     // Create Lambda function for the backend
     const apiFunction = new lambda.Function(this, 'ApiFunction', {
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -172,46 +204,6 @@ export class SetlistaStack extends cdk.Stack {
     // Now create CloudFront distribution after API Gateway is defined
     // Create custom OriginRequestPolicy for API Gateway
     const apiGatewayOriginRequestPolicy = this.createApiGatewayOriginRequestPolicy(this);
-
-    distribution = new cloudfront.Distribution(this, 'DistributionV3', {
-      comment: 'Setlista CloudFront Distribution v2',
-      domainNames: ['setlista.terreno.dev'],
-      certificate: certificate,
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      additionalBehaviors: {
-        '/api/*': {
-          origin: new origins.RestApiOrigin(api, {
-            originPath: '/prod',
-          }),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: apiGatewayOriginRequestPolicy,
-        },
-        '/auth/*': {
-          origin: new origins.RestApiOrigin(api, {
-            originPath: '/prod',
-          }),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: apiGatewayOriginRequestPolicy,
-        },
-      },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-        },
-      ],
-    });
 
     // Grant CloudFront permission to access the S3 bucket
     const bucketPolicyStatement = new iam.PolicyStatement({

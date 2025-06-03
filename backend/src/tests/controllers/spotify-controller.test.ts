@@ -35,6 +35,7 @@ describe('SpotifyController', () => {
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
+      redirect: jest.fn().mockReturnThis(),
     };
   });
 
@@ -84,10 +85,10 @@ describe('SpotifyController', () => {
       await spotifyController.handleCallback(mockRequest as Request, mockResponse as Response);
 
       expect(mockSpotifyService.getAccessToken).toHaveBeenCalledWith('mock-auth-code');
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        access_token: 'mock-access-token',
-        expires_in: 3600,
-      });
+      expect(mockResponse.redirect).toHaveBeenCalledWith(
+        302,
+        expect.stringContaining('/callback?access_token=mock-access-token&expires_in=3600')
+      );
     });
 
     it('should return 400 when authorization code is missing', async () => {
