@@ -7,10 +7,9 @@ const CallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const [, login] = useAuth();
   
-  // Process URL parameters from either query string or hash fragment
-  const urlParams = new URLSearchParams(location.search || location.hash.split('?')[1] || '');
-
   useEffect(() => {
+    // Process URL parameters from either query string or hash fragment
+    const urlParams = new URLSearchParams(location.search || location.hash.split('?')[1] || '');
     console.log('CallbackPage: useEffect triggered. Location:', location.search, location.hash);
     const accessToken = urlParams.get('access_token');
     const expiresIn = urlParams.get('expires_in');
@@ -36,7 +35,7 @@ const CallbackPage: React.FC = () => {
       console.error('CallbackPage: Error calling login function:', e);
     }
     navigate('/?success=logged_in');
-  }, [location.search, location.hash, urlParams, login, navigate]);
+  }, [location.search, location.hash, login, navigate]);
 
   // Simplified return for testing
   return (
