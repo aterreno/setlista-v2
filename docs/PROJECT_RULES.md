@@ -19,6 +19,7 @@
 ### 🔧 Code Quality
 - **Run linter after every edit** - code must pass ESLint
 - **No hardcoded values** - use constants, config files, or environment variables
+- **Don't write comments** - instead write code that is easy to reason about and read
 - **TypeScript strict mode** - all code must be properly typed
 - **Consistent naming conventions** - camelCase for variables/functions, PascalCase for classes
 - **Meaningful variable/function names** - self-documenting code
