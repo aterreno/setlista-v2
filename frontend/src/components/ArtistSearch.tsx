@@ -53,7 +53,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
     <div className="artist-search">
       <h2>Search for Concerts</h2>
       <p className="search-instructions">
-        Create a playlist on spotify by searching for your favorite artists and their recent concerts.
+        Create a playlist on spotify by searching for your favorite artists.
       </p>
       
       <div className="search-form">
@@ -61,7 +61,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
           type="text"
           value={searchTerm}
           onChange={handleSearchTermChange}
-          placeholder="Enter artist name or artist + city"
+          placeholder="Artist name..."
           aria-label="Search query"
         />
       </div>

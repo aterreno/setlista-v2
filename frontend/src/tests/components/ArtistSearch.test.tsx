@@ -58,14 +58,14 @@ describe('ArtistSearch', () => {
     renderArtistSearch();
     
     expect(screen.getByText('Search for Concerts')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter artist name or artist + city')).toBeInTheDocument();
-    expect(screen.getByText('Create a playlist on spotify by searching for your favorite artists and their recent concerts.')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Artist name...')).toBeInTheDocument();
+    expect(screen.getByText('Create a playlist on spotify by searching for your favorite artists.')).toBeInTheDocument();
   });
 
   it('displays search term from props', () => {
     renderArtistSearch({ searchTerm: 'radiohead' });
     
-    const input = screen.getByPlaceholderText('Enter artist name or artist + city');
+    const input = screen.getByPlaceholderText('Artist name...');
     expect(input).toHaveValue('radiohead');
   });
 
@@ -73,7 +73,7 @@ describe('ArtistSearch', () => {
     const onSearchTermChange = jest.fn();
     renderArtistSearch({ onSearchTermChange });
     
-    const input = screen.getByPlaceholderText('Enter artist name or artist + city');
+    const input = screen.getByPlaceholderText('Artist name...');
     fireEvent.change(input, { target: { value: 'new search' } });
     
     expect(onSearchTermChange).toHaveBeenCalledWith('new search');
@@ -83,7 +83,7 @@ describe('ArtistSearch', () => {
     const onPageChange = jest.fn();
     renderArtistSearch({ onPageChange, page: 3 });
     
-    const input = screen.getByPlaceholderText('Enter artist name or artist + city');
+    const input = screen.getByPlaceholderText('Artist name...');
     fireEvent.change(input, { target: { value: 'new search' } });
     
     expect(onPageChange).toHaveBeenCalledWith(1);
