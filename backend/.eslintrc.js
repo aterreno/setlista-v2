@@ -15,7 +15,18 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js', 'dist/**/*', 'node_modules/**/*'],
   rules: {
-    '@typescript-eslint/no-unused-vars': 'error',
     'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_'
+    }],
+    '@typescript-eslint/no-unused-expressions': 'error',
+    'no-duplicate-imports': 'error',
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'eqeqeq': ['error', 'always'],
+    'no-warning-comments': 'error',
+    '@typescript-eslint/ban-ts-comment': 'error'
   },
 };

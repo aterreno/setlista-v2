@@ -35,7 +35,6 @@ class MockSetlistRepository implements SetlistRepository {
     return { type: 'setlists', itemsPerPage: 20, page, total: 0, items: [] };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getSetlistById(_setlistId: string): Promise<any> {
     throw new Error('Not implemented for this test');
   }

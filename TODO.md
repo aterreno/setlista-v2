@@ -1,4 +1,5 @@
 # Code quality todos:
+- ESLINT rules are too weak and absent in frontend.
 - codeQL should not look into tests 
 - add sonarcubbe, respect rules https://rules.sonarsource.com/typescript/ and add it to the PROJECT_RULES
 - add dev environment: it would break so many things with claude code
@@ -22,7 +23,8 @@
     Backend timeout/errors per endpoint
 
 # Features todos:
+- pagination is broken
 - add little map of the venue if possible (image)
 - add instagram shots (search for it, insta has api), search for venue/artist
-- The whole thing needs a better UX
-- The whole thing needs an explaination of why - relive a concert or 'prep' before going to a concert, if it's an artist that the user does not know well.
+- Better UX
+- Why - relive a concert or 'prep' before going to a concert, if it's an artist that the user does not know well, historic concerts of the artist from the past, etc.
