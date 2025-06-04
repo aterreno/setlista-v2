@@ -85,7 +85,7 @@ const ArtistSearch: React.FC<ArtistSearchProps> = ({
       )}
       
       {debouncedSearchTerm.length > 2 && data?.items?.length === 0 && (
-        <p>No concerts or artists found for "{debouncedSearchTerm}". Try a different search term.</p>
+        <p>No concerts or artists found for &quot;{debouncedSearchTerm}&quot;. Try a different search term.</p>
       )}
       
       {data?.items && data.items.length > 0 && (
