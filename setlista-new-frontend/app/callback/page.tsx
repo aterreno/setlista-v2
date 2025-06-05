@@ -1,0 +1,109 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, Music } from 'lucide-react';
+import { handleSpotifyCallback } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function CallbackPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
+  const [authState, login] = useAuth();
+
+  // Run authentication only once when component mounts
+  useEffect(() => {
+    // Skip if we've already attempted auth
+    if (attempted) return;
+    setAttempted(true);
+
+    async function handleAuth() {
+      try {
+        // First check for direct token from backend redirect
+        const accessToken = searchParams.get('access_token');
+        const expiresIn = searchParams.get('expires_in');
+        const errorParam = searchParams.get('error');
+
+        if (errorParam) {
+          setError(`Authentication failed: ${errorParam}`);
+          return;
+        }
+
+        // If we have direct token from backend
+        if (accessToken && expiresIn) {
+          console.log('Direct token received from backend');
+          login(accessToken, parseInt(expiresIn, 10));
+          
+          // Wait a moment before redirecting
+          setTimeout(() => router.push('/'), 1500);
+          return;
+        }
+
+        // OAuth code flow (fallback)
+        const code = searchParams.get('code');
+        const state = searchParams.get('state');
+
+        if (!code) {
+          setError('No authentication parameters found in URL');
+          return;
+        }
+
+        console.log('Exchanging code for token');
+        const response = await handleSpotifyCallback(code, state || '');
+        
+        if (response?.accessToken) {
+          login(response.accessToken, response.expiresIn || 3600);
+          setTimeout(() => router.push('/'), 1500);
+        } else {
+          setError('Failed to authenticate with Spotify');
+        }
+      } catch (err) {
+        console.error('Authentication error:', err);
+        setError('An error occurred during authentication');
+      }
+    }
+
+    handleAuth();
+    // searchParams is stable in Next.js 13+
+  }, [searchParams, attempted]);
+  
+  // Add router to dependency list when using it directly in useEffect
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      const timer = setTimeout(() => router.push('/'), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [authState.isAuthenticated, router]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-8">
+          <Music className="h-12 w-12 text-green-400" />
+          <span className="text-4xl font-bold text-white ml-4">setlista</span>
+        </div>
+        
+        {error ? (
+          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-6 max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-white mb-2">Authentication Error</h2>
+            <p className="text-gray-300">{error}</p>
+            <button 
+              onClick={() => router.push('/')}
+              className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded text-white"
+            >
+              Return to Home
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-12 w-12 text-green-400 animate-spin mb-4" />
+            <h2 className="text-xl font-semibold text-white">Authenticating with Spotify...</h2>
+            <p className="text-gray-400 mt-2">You'll be redirected shortly</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
