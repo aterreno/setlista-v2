@@ -33,14 +33,14 @@ jobs:
     - name: Run tests
       run: npm test -- --watchAll=false
       env:
-        REACT_APP_API_URL: /api
+        NEXT_PUBLIC_API_URL: /api
     
     - name: Build application
       run: npm run build
       env:
-        REACT_APP_API_URL: https://api.setlista.terreno.dev/api
-        REACT_APP_SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-        REACT_APP_SPOTIFY_REDIRECT_URI: https://setlista.terreno.dev/api/spotify/callback
+        NEXT_PUBLIC_API_URL: https://api.setlista.terreno.dev
+        NEXT_PUBLIC_SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+        NEXT_PUBLIC_SPOTIFY_REDIRECT_URI: https://setlista.terreno.dev/api/spotify/callback
 
     
     - name: Configure AWS credentials
@@ -52,7 +52,7 @@ jobs:
     
     - name: Deploy to S3
       run: |
-        aws s3 sync build/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
+        aws s3 sync out/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
     
     - name: Invalidate CloudFront
       run: |

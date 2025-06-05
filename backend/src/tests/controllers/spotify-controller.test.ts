@@ -87,7 +87,7 @@ describe('SpotifyController', () => {
       expect(mockSpotifyService.getAccessToken).toHaveBeenCalledWith('mock-auth-code');
       expect(mockResponse.redirect).toHaveBeenCalledWith(
         302,
-        expect.stringContaining('/callback?access_token=mock-access-token&expires_in=3600')
+        expect.stringContaining('http://localhost:3000/callback/?access_token=mock-access-token&expires_in=3600')
       );
     });
 

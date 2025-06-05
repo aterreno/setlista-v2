@@ -1,4 +1,4 @@
-.PHONY: setup dev docker backend frontend test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean check-deps update-deps audit
+.PHONY: setup dev docker backend frontend frontend-dev frontend-serve test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean check-deps update-deps audit
 
 setup:
 	@echo "Setting up project dependencies..."
@@ -18,9 +18,15 @@ backend:
 	@echo "Starting backend..."
 	cd backend && npm run dev
 
-frontend:
-	@echo "Starting frontend..."
-	cd frontend && npm run start
+frontend-dev:
+	@echo "Starting frontend development server..."
+	cd frontend && npm run dev
+
+frontend-serve:
+	@echo "Serving frontend static files..."
+	cd frontend && npm run serve
+
+frontend: frontend-dev
 
 test:
 	@echo "Running all tests..."

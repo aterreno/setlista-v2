@@ -21,7 +21,28 @@ export default function CallbackPage() {
 
     async function handleAuth() {
       try {
-        // First check for direct token from backend redirect
+        // Check if we're on /callback/ (with trailing slash)
+        // This check helps recover parameters lost in redirect
+        if (typeof window !== 'undefined' && window.location.pathname === '/callback/') {
+          // Try to recover from session storage if available
+          const storedToken = sessionStorage.getItem('pending_spotify_token');
+          const storedExpiry = sessionStorage.getItem('pending_spotify_expiry');
+          
+          if (storedToken && storedExpiry) {
+            console.log('Recovered token from session storage after redirect');
+            login(storedToken, parseInt(storedExpiry, 10));
+            
+            // Clear the stored values
+            sessionStorage.removeItem('pending_spotify_token');
+            sessionStorage.removeItem('pending_spotify_expiry');
+            
+            // Wait a moment before redirecting
+            setTimeout(() => router.push('/'), 1500);
+            return;
+          }
+        }
+        
+        // Get tokens from query parameters
         const accessToken = searchParams.get('access_token');
         const expiresIn = searchParams.get('expires_in');
         const errorParam = searchParams.get('error');
@@ -31,9 +52,16 @@ export default function CallbackPage() {
           return;
         }
 
-        // If we have direct token from backend
+        // Handle query parameter tokens
         if (accessToken && expiresIn) {
-          console.log('Direct token received from backend');
+          console.log('Token received from query parameters');
+          
+          // Save to session storage before processing (in case of redirect)
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('pending_spotify_token', accessToken);
+            sessionStorage.setItem('pending_spotify_expiry', expiresIn);
+          }
+          
           login(accessToken, parseInt(expiresIn, 10));
           
           // Wait a moment before redirecting

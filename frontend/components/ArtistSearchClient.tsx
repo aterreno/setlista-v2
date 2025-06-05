@@ -293,7 +293,7 @@ export default function ArtistSearchClient() {
                             </Button>
                           </Link>
                         )}
-                        <Link href={`/setlist/${setlist.id}`}>
+                        <Link href={`/setlist/?id=${setlist.id}`}>
                           <Button variant="outline" size="sm" className="border-white/20 text-gray-400 hover:text-white">
                             <ExternalLink className="w-4 h-4" />
                           </Button>

@@ -5,9 +5,16 @@ import axios from 'axios';
 // In production, this will be the CloudFront URL or domain name
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Determine the correct base URL path for API calls
+// If NEXT_PUBLIC_API_URL already includes '/api' at the end, we'll use it directly
+// Otherwise, we'll append '/api' to keep consistency
+const formattedBaseURL = API_BASE_URL.endsWith('/api') 
+  ? API_BASE_URL 
+  : `${API_BASE_URL}/api`;
+
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: formattedBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -70,17 +77,17 @@ export interface SearchResponse {
 
 // API Functions
 export const searchArtists = async (query: string) => {
-  const response = await apiClient.get(`/api/artists/search?q=${encodeURIComponent(query)}`);
+  const response = await apiClient.get(`/artists/search?q=${encodeURIComponent(query)}`);
   return response.data;
 };
 
 export const searchSetlists = async (query: string, page = 1) => {
-  const response = await apiClient.get(`/api/setlists/search?q=${encodeURIComponent(query)}&page=${page}`);
+  const response = await apiClient.get(`/setlists/search?q=${encodeURIComponent(query)}&page=${page}`);
   return response.data as SearchResponse;
 };
 
 export const getArtistSetlists = async (artistId: string, page = 1) => {
-  const response = await apiClient.get(`/api/setlists/artist/${artistId}?page=${page}`);
+  const response = await apiClient.get(`/setlists/artist/${artistId}?page=${page}`);
   return response.data as SearchResponse;
 };
 
@@ -90,19 +97,19 @@ export interface SetlistDetailResponse {
 }
 
 export const getSetlistById = async (setlistId: string) => {
-  const response = await apiClient.get(`/api/setlists/${setlistId}`);
+  const response = await apiClient.get(`/setlists/${setlistId}`);
   return response.data as SetlistDetailResponse;
 };
 
 // Spotify integration
 export const getSpotifyAuthUrl = async () => {
-  const response = await apiClient.get('/api/spotify/auth');
+  const response = await apiClient.get('/spotify/auth');
   return response.data.authUrl;
 };
 
 export const createSpotifyPlaylist = async (setlistId: string, token: string) => {
   const response = await apiClient.post(
-    `/api/spotify/playlist/setlist/${setlistId}`, 
+    `/spotify/playlist/setlist/${setlistId}`, 
     {
       access_token: token // Send token in request body
     }
@@ -119,6 +126,6 @@ interface SpotifyCallbackResponse {
 
 export const handleSpotifyCallback = async (code: string, state: string): Promise<SpotifyCallbackResponse> => {
   // Backend expects query parameters, not a POST body
-  const response = await apiClient.get(`/api/spotify/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+  const response = await apiClient.get(`/spotify/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
   return response.data;
 };

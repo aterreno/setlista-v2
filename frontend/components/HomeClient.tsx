@@ -1,10 +1,34 @@
-import { Search, Music, Headphones } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import Link from "next/link"
-import HomeSearchForm from "@/components/HomeSearchForm"
+'use client';
 
-export default function HomePage() {
+import React, { useEffect } from 'react';
+import { Search, Music, Headphones } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import HomeSearchForm from "@/components/HomeSearchForm";
+import { useRouter } from 'next/navigation';
+import { useAuth } from "@/hooks/useAuth";
+
+export default function HomeClient() {
+  const router = useRouter();
+  const [authState, _, logout] = useAuth();
+
+  // Check for pending setlist ID on mount
+  useEffect(() => {
+    try {
+      const pendingId = sessionStorage.getItem('pendingSetlistId');
+      if (pendingId) {
+        console.log('Found pending setlist ID:', pendingId);
+        // Clear the stored ID
+        sessionStorage.removeItem('pendingSetlistId');
+        
+        // Navigate to the setlist detail page
+        router.push(`/setlist/?id=${pendingId}`);
+      }
+    } catch (err) {
+      console.error('Error checking for pending setlist:', err);
+    }
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
@@ -14,12 +38,25 @@ export default function HomePage() {
             <Music className="h-8 w-8 text-green-400" />
             <span className="text-2xl font-bold text-white">setlista</span>
           </Link>
-          <Link href="/auth/spotify">
-            <Button variant="outline" className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black">
-              <Headphones className="w-4 h-4 mr-2" />
-              Login with Spotify
+          {authState.isAuthenticated ? (
+            <Button
+              variant="outline"
+              className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
+              onClick={() => logout()}
+            >
+              Logout
             </Button>
-          </Link>
+          ) : (
+            <Link href="/auth/spotify">
+              <Button
+                variant="outline"
+                className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
+              >
+                <Headphones className="w-4 h-4 mr-2" />
+                Login with Spotify
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -52,26 +89,30 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Music className="w-6 h-6 text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Browse Setlists</h3>
-              <p className="text-gray-400">Explore detailed setlists from live concerts and discover new songs.</p>
+              <h3 className="text-xl font-semibold text-white mb-2">View Setlists</h3>
+              <p className="text-gray-400">
+                Browse complete song lists from concerts, including covers and special performances.
+              </p>
             </div>
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Headphones className="w-6 h-6 text-green-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Create Playlists</h3>
-              <p className="text-gray-400">Automatically generate Spotify playlists from concert setlists.</p>
+              <p className="text-gray-400">
+                Convert any setlist to a Spotify playlist with one click and listen to the concert experience.
+              </p>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-black/20 backdrop-blur-sm mt-20">
-        <div className="container mx-auto px-4 py-8 text-center text-gray-400">
-          <p>&copy; 2024 Setlista. Powered by setlist.fm API and Spotify.</p>
+      <footer className="border-t border-white/10 py-6 bg-black/20 backdrop-blur-sm">
+        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
+          <p>© 2025 setlista. Powered by setlist.fm and Spotify. Not affiliated with either service.</p>
         </div>
       </footer>
     </div>
-  )
+  );
 }
