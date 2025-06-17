@@ -1,10 +1,27 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 echo "🔍 Running pre-commit checks..."
+
+# Ensure node_modules/.bin is in PATH
+export PATH="$(pwd)/node_modules/.bin:$(pwd)/backend/node_modules/.bin:$(pwd)/frontend/node_modules/.bin:$PATH"
+
+# Find the right npx to use
+if command -v npx &> /dev/null; then
+    NPX_CMD="npx"
+elif [ -x "$(pwd)/node_modules/.bin/npx" ]; then
+    NPX_CMD="$(pwd)/node_modules/.bin/npx"
+elif [ -x "$(pwd)/backend/node_modules/.bin/npx" ]; then
+    NPX_CMD="$(pwd)/backend/node_modules/.bin/npx"
+elif [ -x "$(pwd)/frontend/node_modules/.bin/npx" ]; then
+    NPX_CMD="$(pwd)/frontend/node_modules/.bin/npx"
+else
+    echo "❌ Could not find npx. Please ensure it's installed."
+    exit 1
+fi
 
 # Run backend TypeScript compilation check
 echo "🔍 Checking backend TypeScript compilation..."
 cd backend
-npx tsc --noEmit
+$NPX_CMD tsc --noEmit
 if [ $? -ne 0 ]; then
   echo "❌ Backend TypeScript compilation failed. Commit aborted."
   exit 1

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import SetlistDetailClient from '@/components/SetlistDetailClient';
 import { Loader2 } from 'lucide-react';
 
@@ -48,9 +49,9 @@ export default function SetlistErrorBoundary() {
             <p className="text-gray-400 mb-6">
               We couldn't find the setlist you're looking for. The ID might be invalid or the setlist has been removed.
             </p>
-            <a href="/" className="inline-block bg-green-500 hover:bg-green-600 text-black font-semibold px-6 py-3 rounded-lg">
+            <Link href="/" className="inline-block bg-green-500 hover:bg-green-600 text-black font-semibold px-6 py-3 rounded-lg">
               Return to Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>

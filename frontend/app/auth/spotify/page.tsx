@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
@@ -9,7 +9,30 @@ import { Loader2 } from 'lucide-react';
 // Make sure we handle both cases where API_URL might or might not include '/api' at the end
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Loading component for Suspense fallback
+function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin text-green-500 mx-auto" />
+        <h1 className="text-2xl font-bold text-white mt-4">Redirecting to Spotify...</h1>
+        <p className="text-gray-400 mt-2">Please wait while we connect to Spotify</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component wrapped with Suspense boundary
 export default function SpotifyAuthPage() {
+  return (
+    <Suspense fallback={<AuthLoading />}>
+      <SpotifyAuthContent />
+    </Suspense>
+  );
+}
+
+// Component that uses useSearchParams must be wrapped in Suspense
+function SpotifyAuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -52,7 +75,7 @@ export default function SpotifyAuthPage() {
     }
     
     redirectToSpotifyAuth();
-  }, [router]);
+  }, [router, searchParams]);
   
   // Show loading state while redirecting
   return (

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, MapPin, Music, Plus, ExternalLink, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Music, Plus, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ export default function ArtistSearchClient() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [authState, login, logout] = useAuth();
+  const [authState, _login, logout] = useAuth();
   
   // Function to get the full URL for the current search
   const getFullSearchUrl = () => {
@@ -55,7 +55,7 @@ export default function ArtistSearchClient() {
         });
       }
     }
-  }, [searchParams]);
+  }, [searchParams, toast]);
   
   // Special version of performSearch that skips length validation
   // Used specifically for URL parameters

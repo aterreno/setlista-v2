@@ -18,7 +18,7 @@ export default function CustomNotFound() {
     console.log('404 handler - Current path:', path);
 
     // Check if this is a setlist detail URL
-    const setlistMatch = path.match(/\/setlist\/([^\/]+)\/?$/);
+    const setlistMatch = path.match(/\/setlist\/([^/]+)\/?$/);
     
     if (setlistMatch) {
       const setlistId = setlistMatch[1];

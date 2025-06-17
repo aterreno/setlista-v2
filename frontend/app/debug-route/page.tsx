@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export default function DebugRoutePage() {
   const pathname = usePathname();
@@ -40,9 +41,9 @@ export default function DebugRoutePage() {
       <div className="bg-gray-100 p-4 rounded-lg">
         <h2 className="text-xl font-semibold mb-2">Test Navigation</h2>
         <div className="flex flex-col gap-2">
-          <a href="/" className="text-blue-600 hover:underline">Home (regular link)</a>
-          <a href="/setlist/33a2d861/" className="text-blue-600 hover:underline">Setlist with trailing slash (regular link)</a>
-          <a href="/setlist/33a2d861" className="text-blue-600 hover:underline">Setlist without trailing slash (regular link)</a>
+          <Link href="/" className="text-blue-600 hover:underline">Home (Next.js Link)</Link>
+          <Link href="/setlist/33a2d861/" className="text-blue-600 hover:underline">Setlist with trailing slash (Next.js Link)</Link>
+          <Link href="/setlist/33a2d861" className="text-blue-600 hover:underline">Setlist without trailing slash (Next.js Link)</Link>
         </div>
       </div>
     </div>

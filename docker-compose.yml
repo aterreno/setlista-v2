@@ -25,8 +25,9 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://localhost:3001/api
+      - NEXT_PUBLIC_API_URL=http://backend:3001
     env_file:
       - ./frontend/.env
+    command: ["npm", "run", "dev"]
     depends_on:
       - backend

@@ -132,7 +132,7 @@ export default function CallbackPage() {
       const timer = setTimeout(() => router.push(returnUrl), 1500);
       return () => clearTimeout(timer);
     }
-  }, [authState.isAuthenticated, router]);
+  }, [authState.isAuthenticated, router, login]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
