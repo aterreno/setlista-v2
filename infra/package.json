@@ -19,7 +19,7 @@
     "@types/dotenv": "^8.2.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^24.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.33.0",
     "aws-cdk": "2.1018.0",
     "eslint": "^9.29.0",
