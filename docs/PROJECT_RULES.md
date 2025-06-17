@@ -23,6 +23,7 @@
 - **TypeScript strict mode** - all code must be properly typed
 - **Consistent naming conventions** - camelCase for variables/functions, PascalCase for classes
 - **Meaningful variable/function names** - self-documenting code
+- **Respect ESLint rules** - no warnings, no errors
 
 ### 🏛️ Software Engineering Best Practices
 - **DRY (Don't Repeat Yourself)** - extract common functionality

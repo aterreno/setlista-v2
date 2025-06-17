@@ -29,9 +29,9 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 interface SidebarContextValue {
   state: "expanded" | "collapsed"
   open: boolean
-  setOpen: (openState: boolean) => void
+  setOpen: (_isOpen: boolean) => void
   openMobile: boolean
-  setOpenMobile: (openState: boolean) => void
+  setOpenMobile: (_isOpenMobile: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
 }
@@ -52,7 +52,7 @@ const SidebarProvider = React.forwardRef<
   React.ComponentProps<"div"> & {
     defaultOpen?: boolean
     open?: boolean
-    onOpenChange?: (open: boolean) => void
+    onOpenChange?: (_isOpen: boolean) => void
   }
 >(
   (
@@ -75,16 +75,16 @@ const SidebarProvider = React.forwardRef<
     const [_open, _setOpen] = React.useState(defaultOpen)
     const open = openProp ?? _open
     const setOpen = React.useCallback(
-      (value: boolean | ((value: boolean) => boolean)) => {
-        const openState = typeof value === "function" ? value(open) : value
+      (newStateOrFn: boolean | ((current: boolean) => boolean)) => {
+        const nextOpenState = typeof newStateOrFn === "function" ? newStateOrFn(open) : newStateOrFn
         if (setOpenProp) {
-          setOpenProp(openState)
+          setOpenProp(nextOpenState)
         } else {
-          _setOpen(openState)
+          _setOpen(nextOpenState)
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${nextOpenState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
       [setOpenProp, open]
     )

@@ -28,13 +28,13 @@ export default function ArtistSearchClient() {
   const router = useRouter();
   const [authState, /* unused login */, logout] = useAuth();
   
-  // Function to get the full URL for the current search - kept for future sharing feature
-  const _getFullSearchUrl = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.origin}/search?q=${encodeURIComponent(searchTerm)}`;
-    }
-    return `/search?q=${encodeURIComponent(searchTerm)}`;
-  };
+  // NOTE: Sharing feature removed for now - will be reimplemented in future ticket
+  // const getFullSearchUrl = () => {
+  //   if (typeof window !== 'undefined') {
+  //     return `${window.location.origin}/search?q=${encodeURIComponent(searchTerm)}`;
+  //   }
+  //   return `/search?q=${encodeURIComponent(searchTerm)}`;
+  // };
 
   // Get query from URL params
   useEffect(() => {

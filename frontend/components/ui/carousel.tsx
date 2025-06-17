@@ -18,7 +18,7 @@ type CarouselProps = {
   opts?: CarouselOptions
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
-  setApi?: (api: CarouselApi) => void
+  setApi?: (_emblaApi: CarouselApi) => void
 }
 
 type CarouselContextProps = {
@@ -103,7 +103,7 @@ const Carousel = React.forwardRef<
         return
       }
 
-      setApi(api)
+      setApi(api) // Pass the API instance to parent
     }, [api, setApi])
 
     React.useEffect(() => {
