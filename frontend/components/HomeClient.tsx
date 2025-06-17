@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function HomeClient() {
   const router = useRouter();
-  const [authState, _, logout] = useAuth();
+  const [authState, /* unused login */, logout] = useAuth();
 
   // Check for pending setlist ID or saved search on mount
   useEffect(() => {

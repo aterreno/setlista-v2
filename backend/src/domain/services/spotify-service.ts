@@ -65,7 +65,7 @@ export class SpotifyService {
       tracks = await searchWithRetry(query);
 
       return tracks.length > 0 ? tracks[0] : null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

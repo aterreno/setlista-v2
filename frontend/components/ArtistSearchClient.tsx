@@ -26,10 +26,10 @@ export default function ArtistSearchClient() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [authState, _login, logout] = useAuth();
+  const [authState, /* unused login */, logout] = useAuth();
   
-  // Function to get the full URL for the current search
-  const getFullSearchUrl = () => {
+  // Function to get the full URL for the current search - kept for future sharing feature
+  const _getFullSearchUrl = () => {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/search?q=${encodeURIComponent(searchTerm)}`;
     }

@@ -123,7 +123,7 @@ export default function CallbackPage() {
 
     handleAuth();
     // searchParams is stable in Next.js 13+
-  }, [searchParams, attempted]);
+  }, [searchParams, attempted, login, router]);
   
   // Add router to dependency list when using it directly in useEffect
   useEffect(() => {

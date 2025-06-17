@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
-import { getSetlistById, createSpotifyPlaylist, Setlist as SetlistType, SetlistDetailResponse } from "@/lib/api";
+import { getSetlistById, createSpotifyPlaylist, SetlistDetailResponse } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -24,7 +24,7 @@ export default function SetlistDetailClient({ id }: SetlistDetailClientProps) {
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState<string | null>(null);
   const router = useRouter();
-  const [authState, _, logout] = useAuth();
+  const [authState, /* unused login */, logout] = useAuth();
   const { toast } = useToast();
 
   // Fetch setlist detail on mount
