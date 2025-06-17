@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Search, Music, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -8,7 +8,20 @@ import HomeSearchForm from "@/components/HomeSearchForm";
 import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth";
 
-export default function HomeClient() {
+// Loading component for Suspense fallback
+function HomeLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="text-center">
+        <div className="h-12 w-12 border-4 border-t-green-500 border-green-500/30 rounded-full animate-spin mx-auto"></div>
+        <p className="text-xl text-white mt-4">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Inner component that uses navigation hooks
+function HomeInner() {
   const router = useRouter();
   const [authState, /* unused login */, logout] = useAuth();
 
@@ -128,5 +141,14 @@ export default function HomeClient() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// Main exported component with internal Suspense boundary
+export default function HomeClient() {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeInner />
+    </Suspense>
   );
 }

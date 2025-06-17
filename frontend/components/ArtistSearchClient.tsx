@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Calendar, MapPin, Music, Plus, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,18 @@ import Link from "next/link";
 import { searchSetlists, Setlist, createSpotifyPlaylist, SearchType } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function ArtistSearchClient() {
+// Loading component for Suspense fallback
+function SearchLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
+      <p className="text-white">Loading search results...</p>
+    </div>
+  );
+}
+
+// Inner component that uses navigation hooks
+function ArtistSearchInner() {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<Setlist[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,249 +121,208 @@ export default function ArtistSearchClient() {
       setLoading(false);
     }
   };
-
+  
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim().length >= 2) { // Allow 2-character searches (e.g., "U2")
-      router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
-    } else if (searchTerm.trim().length === 1) {
+    if (searchTerm.length < 2) {
       toast({
         title: "Search term too short",
         description: "Please enter at least 2 characters to search.",
         variant: "destructive"
       });
+      return;
     }
+    performSearch(searchTerm);
+    router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
   };
-
+  
   // Handle creating a Spotify playlist
   const handleCreatePlaylist = async (setlistId: string) => {
     if (!authState.isAuthenticated || !authState.accessToken) {
       toast({
         title: "Not logged in",
-        description: "Please login with Spotify to create playlists",
+        description: "Please log in with Spotify to create playlists.",
         variant: "destructive"
       });
       return;
     }
 
+    setCreatingPlaylist(prev => ({ ...prev, [setlistId]: true }));
+    
     try {
-      setCreatingPlaylist(prev => ({ ...prev, [setlistId]: true }));
-      
+      // Pass the access token from auth state as required by the API
       const response = await createSpotifyPlaylist(setlistId, authState.accessToken);
       
-      if (response?.playlist?.external_urls?.spotify) {
-        setPlaylistUrls(prev => ({ ...prev, [setlistId]: response.playlist.external_urls.spotify }));
+      if (response.playlistUrl) {
+        setPlaylistUrls(prev => ({ ...prev, [setlistId]: response.playlistUrl }));
         toast({
-          title: "Playlist created!",
-          description: "Your Spotify playlist has been created successfully."
+          title: "Playlist Created",
+          description: "Spotify playlist has been created successfully!",
         });
       } else {
-        throw new Error("Playlist URL not found in response");
+        throw new Error('No playlist URL returned');
       }
-    } catch (error) {
-      console.error("Error creating playlist:", error);
-      toast({
-        title: "Error creating playlist",
-        description: "There was a problem creating your Spotify playlist. Please try again.",
-        variant: "destructive"
-      });
+    } catch (error: unknown) {
+      console.error('Error creating playlist:', error);
+      
+      // Proper type narrowing for the error object
+      const err = error as { response?: { status?: number } };
+      
+      // Handle token expiration with safe property access
+      if (err?.response?.status === 401) {
+        toast({
+          title: "Session Expired",
+          description: "Your Spotify session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        logout();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create playlist. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setCreatingPlaylist(prev => ({ ...prev, [setlistId]: false }));
     }
   };
-
+  
   // Handle load more
   const handleLoadMore = () => {
     if (page < Math.ceil(total / itemsPerPage)) {
       performSearch(searchTerm, page + 1);
     }
   };
-
+  
   // Format date (YYYY-MM-DD to locale date)
   const formatDate = (dateString: string) => {
-    // Convert from "dd-MM-yyyy" to a Date object
-    const parts = dateString.split('-');
-    if (parts.length !== 3) return dateString;
+    if (!dateString) return 'Unknown date';
     
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JS Date
-    const year = parseInt(parts[2], 10);
-    
-    const date = new Date(year, month, day);
-    
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
-
+  
   // Get songs from setlist sets
   const getSongs = (setlist: Setlist) => {
-    if (!setlist.sets || !setlist.sets.set || setlist.sets.set.length === 0) {
-      return [];
-    }
-    
     const songs: any[] = [];
-    setlist.sets.set.forEach(set => {
-      if (set.song) {
-        if (Array.isArray(set.song)) {
+    
+    if (setlist.sets && setlist.sets.set) {
+      setlist.sets.set.forEach(set => {
+        if (set.song) {
           songs.push(...set.song);
-        } else {
-          songs.push(set.song);
         }
-      }
-    });
+      });
+    }
     
     return songs;
   };
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Music className="h-8 w-8 text-green-400" />
-            <span className="text-2xl font-bold text-white">setlista</span>
-          </Link>
-          {authState.isAuthenticated ? (
-            <Button 
-              onClick={() => logout()}
-              variant="outline" 
-              className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
-            >
-              Log Out
-            </Button>
-          ) : (
-            <Link href="/auth/spotify">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
+      <main className="container mx-auto px-4">
+        <div className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 text-center">
+            Find Concert Setlists
+          </h1>
+          
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-grow">
+                <Input
+                  type="text"
+                  placeholder="Search by artist name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-green-500"
+                />
+              </div>
               <Button 
-                variant="outline" 
-                className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
+                type="submit" 
+                className="bg-green-500 hover:bg-green-600 text-black font-semibold"
+                disabled={loading}
               >
-                Login with Spotify
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
               </Button>
-            </Link>
-          )}
+            </div>
+          </form>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Input
-              type="text"
-              placeholder="Search for an artist..."
-              className="w-full h-16 text-lg pl-6 pr-16 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-400 focus:ring-green-400"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              minLength={2}
-              required
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="absolute right-2 top-2 h-12 px-6 bg-green-500 hover:bg-green-600 text-black font-semibold"
-              disabled={loading}
-            >
-              {loading ? 'Searching...' : 'Search'}
-            </Button>
+        {loading && results.length === 0 && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-green-500" />
           </div>
-        </form>
+        )}
 
-        {/* Search Results */}
         {error && (
-          <div className="bg-red-500/20 text-red-300 p-4 rounded-lg mb-6">
+          <div className="max-w-md mx-auto p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-white text-center">
             {error}
           </div>
         )}
 
-        {results.length > 0 && (
+        {!loading && results.length > 0 && (
           <>
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-white mb-2">
-                {searchType === 'artist' && (
-                  <>Concerts by <span className="text-green-400">{results[0].artist.name}</span></>
-                )}
-                {searchType === 'venue' && (
-                  <>Concerts at <span className="text-green-400">{results[0].venue.name}</span></>
-                )}
-                {searchType === 'city' && (
-                  <>Concerts in <span className="text-green-400">{results[0].venue.city.name}, {results[0].venue.city.country.name}</span></>
-                )}
-                {searchType === 'festival' && (
-                  <>Concerts at <span className="text-green-400">{searchTerm}</span> festival</>
-                )}
-              </h1>
-              <p className="text-gray-400">Found {total} concerts with setlists</p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-gray-300">
+                  <span className="font-bold text-white">{total}</span> {searchType === 'artist' ? 'concerts' : 'setlists'} found
+                </p>
+              </div>
             </div>
 
-            {/* Concert Cards */}
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {results.map((setlist) => (
-                <Card
-                  key={setlist.id}
-                  className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
+                <Card key={setlist.id} className="bg-black/30 border-white/10 text-white overflow-hidden hover:border-green-500/50 transition-all">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-white text-xl mb-2">{setlist.venue.name}</CardTitle>
-                        <div className="flex items-center space-x-4 text-gray-400 text-sm">
-                          <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            {setlist.venue.city.name}, {setlist.venue.city.country.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {formatDate(setlist.eventDate)}
-                          </div>
+                        <Badge className="bg-green-500/20 text-green-400 mb-2">
+                          {setlist.eventDate ? formatDate(setlist.eventDate) : 'Unknown date'}
+                        </Badge>
+                        <CardTitle className="text-xl mb-1">{setlist.artist?.name || 'Unknown Artist'}</CardTitle>
+                        <div className="flex items-center text-gray-400 text-sm mb-3">
+                          <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{setlist.venue?.name}, {setlist.venue?.city?.name}, {setlist.venue?.city?.country?.name || ''}</span>
                         </div>
-                        {setlist.tour && (
-                          <Badge variant="secondary" className="mt-2 bg-purple-500/20 text-purple-300 border-purple-500/30">
-                            {setlist.tour.name}
-                          </Badge>
-                        )}
                       </div>
-                      <div className="flex space-x-2">
-                        {authState.isAuthenticated ? (
-                          playlistUrls[setlist.id] ? (
-                            <Button
-                              size="sm"
-                              className="bg-green-500 hover:bg-green-600 text-white font-semibold"
-                              asChild
-                            >
-                              <a 
-                                href={playlistUrls[setlist.id]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                Open in Spotify
-                              </a>
+                      <div className="flex space-x-1">
+                        {playlistUrls[setlist.id] ? (
+                          <Link href={playlistUrls[setlist.id]} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-black font-semibold">
+                              <Music className="w-4 h-4 mr-2" />
+                              Open Playlist
                             </Button>
-                          ) : (
-                            <Button 
-                              size="sm" 
-                              className="bg-green-500 hover:bg-green-600 text-black font-semibold"
-                              onClick={() => handleCreatePlaylist(setlist.id)}
-                              disabled={creatingPlaylist[setlist.id]}
-                            >
-                              {creatingPlaylist[setlist.id] ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                  Creating...
-                                </>
-                              ) : (
-                                <>
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Create Playlist
-                                </>
-                              )}
-                            </Button>
-                          )
+                          </Link>
+                        ) : creatingPlaylist[setlist.id] ? (
+                          <Button size="sm" className="bg-green-500/50 text-black font-semibold" disabled>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Creating...
+                          </Button>
+                        ) : authState.isAuthenticated ? (
+                          <Button 
+                            size="sm" 
+                            className="bg-green-500 hover:bg-green-600 text-black font-semibold"
+                            onClick={() => handleCreatePlaylist(setlist.id)}
+                            disabled={!getSongs(setlist).length}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Playlist
+                          </Button>
                         ) : (
                           <Button 
                             size="sm" 
@@ -439,5 +409,15 @@ export default function ArtistSearchClient() {
         )}
       </main>
     </div>
+  );
+}
+
+// Main exported component with internal Suspense boundary
+// This ensures proper Suspense boundaries for navigation hooks
+export default function ArtistSearchClient() {
+  return (
+    <Suspense fallback={<SearchLoading />}>
+      <ArtistSearchInner />
+    </Suspense>
   );
 }

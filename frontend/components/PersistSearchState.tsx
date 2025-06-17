@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, ReactElement } from 'react';
+import React, { useEffect, ReactElement, Suspense } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 
@@ -15,13 +15,15 @@ import { useRouter } from 'next/navigation';
  * - Error handling for browser APIs
  * - Comprehensive logging for debugging
  * - Clean separation of concerns
+ * - Properly wrapped navigation hooks in Suspense boundary
  */
 
 const SEARCH_QUERY_KEY = 'setlista_last_search_query';
 const SEARCH_PATH_KEY = 'setlista_last_search_path';
 const FROM_AUTH_KEY = 'setlista_from_auth';
 
-export default function PersistSearchState(): ReactElement | null {
+// Inner component that safely uses navigation hooks within Suspense
+function PersistSearchStateInner(): ReactElement | null {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -70,4 +72,14 @@ export default function PersistSearchState(): ReactElement | null {
   }, [searchParams, pathname, router]);
 
   return null;
+}
+
+// Main exported component with internal Suspense boundary to properly handle
+// navigation hooks like useSearchParams(), usePathname() and useRouter()
+export default function PersistSearchState(): ReactElement {
+  return (
+    <Suspense fallback={null}>
+      <PersistSearchStateInner />
+    </Suspense>
+  );
 }

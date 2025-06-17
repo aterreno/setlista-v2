@@ -1,5 +1,5 @@
-import React from 'react';
-import SetlistErrorBoundary from './errorBoundary';
+import SetlistErrorBoundaryClient from '@/components/SetlistErrorBoundaryClient';
+import ClientPageWrapper from '@/components/ClientPageWrapper';
 
 // This dummy generateStaticParams allows us to use static export
 // In a real production app, you would fetch actual data from your API
@@ -11,7 +11,9 @@ export async function generateStaticParams() {
 
 // This page can now be statically exported
 export default function SetlistDetailPage() {
-  // Use our error boundary component that can extract params from the URL
-  // even when client-side routing isn't working properly
-  return <SetlistErrorBoundary />
+  return (
+    <ClientPageWrapper>
+      <SetlistErrorBoundaryClient />
+    </ClientPageWrapper>
+  );
 }
