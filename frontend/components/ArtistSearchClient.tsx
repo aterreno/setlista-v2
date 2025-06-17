@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { searchSetlists, Setlist, createSpotifyPlaylist } from "@/lib/api";
+import { searchSetlists, Setlist, createSpotifyPlaylist, SearchType } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ArtistSearchClient() {
@@ -20,25 +20,73 @@ export default function ArtistSearchClient() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [searchType, setSearchType] = useState<SearchType>('artist');
   const [creatingPlaylist, setCreatingPlaylist] = useState<Record<string, boolean>>({});
   const [playlistUrls, setPlaylistUrls] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [authState, login, logout] = useAuth();
+  
+  // Function to get the full URL for the current search
+  const getFullSearchUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/search?q=${encodeURIComponent(searchTerm)}`;
+    }
+    return `/search?q=${encodeURIComponent(searchTerm)}`;
+  };
 
   // Get query from URL params
   useEffect(() => {
     const query = searchParams.get('q');
+    console.log(`URL query parameter: "${query}", length: ${query?.length || 0}`);
+    
     if (query) {
       setSearchTerm(query);
-      performSearch(query);
+      // Force search even for 2-character queries like "U2"
+      if (query.length >= 2) {
+        // Skip normal length validation by using this special function
+        performSearchNoValidation(query);
+      } else if (query.length === 1) {
+        toast({
+          title: "Search term too short",
+          description: "Please enter at least 2 characters to search.",
+          variant: "destructive"
+        });
+      }
     }
   }, [searchParams]);
+  
+  // Special version of performSearch that skips length validation
+  // Used specifically for URL parameters
+  const performSearchNoValidation = async (query: string, pageNum = 1) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log(`Executing search with query: "${query}"`);
+      const response = await searchSetlists(query, pageNum);
+      setResults(response.items);
+      setTotal(response.total);
+      setItemsPerPage(response.itemsPerPage);
+      setPage(pageNum);
+      // Set the search type from the response
+      if (response.searchType) {
+        setSearchType(response.searchType);
+      } else {
+        setSearchType('artist'); // Default to artist if not specified
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      setError('An error occurred while searching. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Perform the search
   const performSearch = async (query: string, pageNum = 1) => {
-    if (query.length < 3) return;
+    if (query.length < 2) return; // Allow 2-character searches (e.g., "U2")
     
     setLoading(true);
     setError('');
@@ -49,6 +97,12 @@ export default function ArtistSearchClient() {
       setTotal(response.total);
       setItemsPerPage(response.itemsPerPage);
       setPage(pageNum);
+      // Set the search type from the response
+      if (response.searchType) {
+        setSearchType(response.searchType);
+      } else {
+        setSearchType('artist'); // Default to artist if not specified
+      }
     } catch (err) {
       console.error('Search error:', err);
       setError('An error occurred while searching. Please try again.');
@@ -60,8 +114,14 @@ export default function ArtistSearchClient() {
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim().length >= 3) {
+    if (searchTerm.trim().length >= 2) { // Allow 2-character searches (e.g., "U2")
       router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
+    } else if (searchTerm.trim().length === 1) {
+      toast({
+        title: "Search term too short",
+        description: "Please enter at least 2 characters to search.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -188,7 +248,7 @@ export default function ArtistSearchClient() {
               className="w-full h-16 text-lg pl-6 pr-16 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-400 focus:ring-green-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              minLength={3}
+              minLength={2}
               required
             />
             <Button
@@ -213,7 +273,18 @@ export default function ArtistSearchClient() {
           <>
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-white mb-2">
-                Concerts by <span className="text-green-400">{results[0].artist.name}</span>
+                {searchType === 'artist' && (
+                  <>Concerts by <span className="text-green-400">{results[0].artist.name}</span></>
+                )}
+                {searchType === 'venue' && (
+                  <>Concerts at <span className="text-green-400">{results[0].venue.name}</span></>
+                )}
+                {searchType === 'city' && (
+                  <>Concerts in <span className="text-green-400">{results[0].venue.city.name}, {results[0].venue.city.country.name}</span></>
+                )}
+                {searchType === 'festival' && (
+                  <>Concerts at <span className="text-green-400">{searchTerm}</span> festival</>
+                )}
               </h1>
               <p className="text-gray-400">Found {total} concerts with setlists</p>
             </div>
@@ -283,15 +354,22 @@ export default function ArtistSearchClient() {
                             </Button>
                           )
                         ) : (
-                          <Link href="/auth/spotify">
-                            <Button 
-                              size="sm" 
-                              className="bg-green-500 hover:bg-green-600 text-black font-semibold"
-                            >
-                              <Music className="w-4 h-4 mr-2" />
-                              Login for Playlist
-                            </Button>
-                          </Link>
+                          <Button 
+                            size="sm" 
+                            className="bg-green-500 hover:bg-green-600 text-black font-semibold"
+                            onClick={() => {
+                              // Save current search directly to localStorage before redirect
+                              if (typeof window !== 'undefined') {
+                                window.localStorage.setItem('setlista_search', searchTerm);
+                                console.log(`Search state saved: ${searchTerm}`);
+                              }
+                              // Redirect to Spotify login
+                              window.location.href = '/auth/spotify';
+                            }}
+                          >
+                            <Music className="w-4 h-4 mr-2" />
+                            Login for Playlist
+                          </Button>
                         )}
                         <Link href={`/setlist/?id=${setlist.id}`}>
                           <Button variant="outline" size="sm" className="border-white/20 text-gray-400 hover:text-white">

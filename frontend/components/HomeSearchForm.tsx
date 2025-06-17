@@ -5,15 +5,30 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function HomeSearchForm() {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    const trimmedQuery = query.trim();
+    console.log(`Search query: "${trimmedQuery}", length: ${trimmedQuery.length}`);
+    
+    if (trimmedQuery.length >= 2) {
+      // Allow 2-character searches (e.g., "U2")
+      router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    } else if (trimmedQuery.length === 1) {
+      console.log('Search rejected: single character query');
+      toast({
+        title: "Search term too short",
+        description: "Please enter at least 2 characters to search.",
+        variant: "destructive"
+      });
+    } else if (trimmedQuery.length === 0) {
+      console.log('Search rejected: empty query');
     }
   };
 

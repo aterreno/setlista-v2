@@ -12,9 +12,10 @@ export default function HomeClient() {
   const router = useRouter();
   const [authState, _, logout] = useAuth();
 
-  // Check for pending setlist ID on mount
+  // Check for pending setlist ID or saved search on mount
   useEffect(() => {
     try {
+      // First check for pending setlist ID
       const pendingId = sessionStorage.getItem('pendingSetlistId');
       if (pendingId) {
         console.log('Found pending setlist ID:', pendingId);
@@ -23,11 +24,24 @@ export default function HomeClient() {
         
         // Navigate to the setlist detail page
         router.push(`/setlist/?id=${pendingId}`);
+        return;
+      }
+      
+      // Then check if we came from a search page login
+      const savedSearch = localStorage.getItem('setlista_search');
+      if (savedSearch && authState.isAuthenticated) {
+        console.log('Found saved search query, restoring search state:', savedSearch);
+        
+        // Clear the saved search to avoid repeated redirects
+        localStorage.removeItem('setlista_search');
+        
+        // Navigate back to the search page with the saved query
+        router.push(`/search?q=${encodeURIComponent(savedSearch)}`);
       }
     } catch (err) {
-      console.error('Error checking for pending setlist:', err);
+      console.error('Error checking for pending navigation:', err);
     }
-  }, [router]);
+  }, [router, authState.isAuthenticated]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">

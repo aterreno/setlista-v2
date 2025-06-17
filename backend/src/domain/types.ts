@@ -3,6 +3,7 @@ export interface Artist {
   name: string;
   sortName: string;
   url?: string;
+  mbid?: string; // Unique MusicBrainz ID for the artist, needed for setlist.fm API
 }
 
 export interface Venue {
@@ -42,12 +43,21 @@ export interface Setlist {
   url: string;
 }
 
+export enum SearchType {
+  ARTIST = 'artist',
+  VENUE = 'venue',
+  CITY = 'city',
+  FESTIVAL = 'festival'
+}
+
 export interface SearchResult<T> {
   type: string;
   itemsPerPage: number;
   page: number;
   total: number;
   items: T[];
+  searchType?: SearchType; // Indicates what type of search was performed
+  searchQuery?: string;   // The original search query
 }
 
 export interface SetlistSet {

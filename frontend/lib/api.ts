@@ -21,6 +21,8 @@ const apiClient = axios.create({
 });
 
 // Types
+export type SearchType = 'artist' | 'venue' | 'city' | 'festival';
+
 export interface Artist {
   mbid: string;
   name: string;
@@ -73,6 +75,8 @@ export interface SearchResponse {
   page: number;
   total: number;
   items: Setlist[];
+  searchType?: SearchType;
+  searchQuery?: string;
 }
 
 // API Functions

@@ -14,10 +14,35 @@ export default function CallbackPage() {
   const [authState, login] = useAuth();
 
   // Run authentication only once when component mounts
+  // Get return URL from session storage or default to homepage
+  const getReturnUrl = () => {
+    if (typeof window !== 'undefined') {
+      const returnTo = sessionStorage.getItem('spotify_return_url');
+      if (returnTo) {
+        // Clear the stored value
+        sessionStorage.removeItem('spotify_return_url');
+        
+        // If it's a full URL with origin, use it directly
+        if (returnTo.startsWith('http')) {
+          return returnTo;
+        }
+        // Otherwise treat it as a relative path
+        return returnTo;
+      }
+    }
+    return '/';
+  };
+
   useEffect(() => {
     // Skip if we've already attempted auth
     if (attempted) return;
     setAttempted(true);
+    
+    // Store returnTo parameter in session storage if present
+    const returnTo = searchParams.get('returnTo');
+    if (returnTo && typeof window !== 'undefined') {
+      sessionStorage.setItem('spotify_return_url', returnTo);
+    }
 
     async function handleAuth() {
       try {
@@ -37,7 +62,8 @@ export default function CallbackPage() {
             sessionStorage.removeItem('pending_spotify_expiry');
             
             // Wait a moment before redirecting
-            setTimeout(() => router.push('/'), 1500);
+            const returnUrl = getReturnUrl();
+            setTimeout(() => router.push(returnUrl), 1500);
             return;
           }
         }
@@ -65,7 +91,8 @@ export default function CallbackPage() {
           login(accessToken, parseInt(expiresIn, 10));
           
           // Wait a moment before redirecting
-          setTimeout(() => router.push('/'), 1500);
+          const returnUrl = getReturnUrl();
+          setTimeout(() => router.push(returnUrl), 1500);
           return;
         }
 
@@ -83,7 +110,8 @@ export default function CallbackPage() {
         
         if (response?.accessToken) {
           login(response.accessToken, response.expiresIn || 3600);
-          setTimeout(() => router.push('/'), 1500);
+          const returnUrl = getReturnUrl();
+          setTimeout(() => router.push(returnUrl), 1500);
         } else {
           setError('Failed to authenticate with Spotify');
         }
@@ -100,7 +128,8 @@ export default function CallbackPage() {
   // Add router to dependency list when using it directly in useEffect
   useEffect(() => {
     if (authState.isAuthenticated) {
-      const timer = setTimeout(() => router.push('/'), 1500);
+      const returnUrl = getReturnUrl();
+      const timer = setTimeout(() => router.push(returnUrl), 1500);
       return () => clearTimeout(timer);
     }
   }, [authState.isAuthenticated, router]);
