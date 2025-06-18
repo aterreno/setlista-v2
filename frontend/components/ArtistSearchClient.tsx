@@ -15,10 +15,26 @@ import { useAuth } from "@/hooks/useAuth";
 // Loading component for Suspense fallback
 function SearchLoading() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh]">
-      <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
-      <p className="text-white">Loading search results...</p>
-    </div>
+    <main className="container mx-auto px-4 py-8">
+      <div className="mb-12">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 text-center">
+          Find Concert Setlists
+        </h1>
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-grow">
+              <div className="h-10 w-full bg-white/10 border border-white/20 rounded-md animate-pulse"></div>
+            </div>
+            <div className="h-10 w-24 bg-green-500/30 rounded-md animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
+        <p className="text-white text-lg">Loading search results...</p>
+      </div>
+    </main>
   );
 }
 
@@ -234,8 +250,7 @@ function ArtistSearchInner() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
-      <main className="container mx-auto px-4">
+    <main className="container mx-auto px-4 py-8">
         <div className="mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 text-center">
             Find Concert Setlists
@@ -285,11 +300,11 @@ function ArtistSearchInner() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 gap-6 md:gap-8 mb-12">
               {results.map((setlist) => (
-                <Card key={setlist.id} className="bg-black/30 border-white/10 text-white overflow-hidden hover:border-green-500/50 transition-all">
+                <Card key={setlist.id} className="bg-black/30 border-white/10 text-white overflow-hidden hover:border-green-500/50 transition-all mb-4">
                   <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                       <div>
                         <Badge className="bg-green-500/20 text-green-400 mb-2">
                           {setlist.eventDate ? formatDate(setlist.eventDate) : 'Unknown date'}
@@ -300,23 +315,23 @@ function ArtistSearchInner() {
                           <span className="truncate">{setlist.venue?.name}, {setlist.venue?.city?.name}, {setlist.venue?.city?.country?.name || ''}</span>
                         </div>
                       </div>
-                      <div className="flex space-x-1">
+                      <div className="flex flex-col xs:flex-row gap-2">
                         {playlistUrls[setlist.id] ? (
                           <Link href={playlistUrls[setlist.id]} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-black font-semibold">
+                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-black font-semibold whitespace-nowrap w-full xs:w-auto">
                               <Music className="w-4 h-4 mr-2" />
                               Open Playlist
                             </Button>
                           </Link>
                         ) : creatingPlaylist[setlist.id] ? (
-                          <Button size="sm" className="bg-green-500/50 text-black font-semibold" disabled>
+                          <Button size="sm" className="bg-green-500/50 text-black font-semibold whitespace-nowrap w-full xs:w-auto" disabled>
                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             Creating...
                           </Button>
                         ) : authState.isAuthenticated ? (
                           <Button 
                             size="sm" 
-                            className="bg-green-500 hover:bg-green-600 text-black font-semibold"
+                            className="bg-green-500 hover:bg-green-600 text-black font-semibold whitespace-nowrap w-full xs:w-auto"
                             onClick={() => handleCreatePlaylist(setlist.id)}
                             disabled={!getSongs(setlist).length}
                           >
@@ -326,7 +341,7 @@ function ArtistSearchInner() {
                         ) : (
                           <Button 
                             size="sm" 
-                            className="bg-green-500 hover:bg-green-600 text-black font-semibold"
+                            className="bg-green-500 hover:bg-green-600 text-black font-semibold whitespace-nowrap w-full xs:w-auto"
                             onClick={() => {
                               // Save current search directly to localStorage before redirect
                               if (typeof window !== 'undefined') {
@@ -342,7 +357,7 @@ function ArtistSearchInner() {
                           </Button>
                         )}
                         <Link href={`/setlist/?id=${setlist.id}`}>
-                          <Button variant="outline" size="sm" className="border-white/20 text-gray-400 hover:text-white">
+                          <Button variant="outline" size="sm" className="border-white/20 text-gray-400 hover:text-white w-full xs:w-auto mt-2 xs:mt-0">
                             <ExternalLink className="w-4 h-4" />
                           </Button>
                         </Link>
@@ -407,8 +422,7 @@ function ArtistSearchInner() {
             </p>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 }
 
