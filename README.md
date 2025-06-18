@@ -58,7 +58,7 @@ A full-stack web application that allows users to search for artists on Setlist.
 ### Running locally
 
 ```bash
-# Start the full stack locally
+# Start the full stack locally (Docker)
 make dev
 
 # Run backend only
@@ -66,9 +66,31 @@ make backend
 
 # Run frontend only
 make frontend
+
+# Start frontend production server
+make start-frontend
+
+# Serve built static files
+make serve-frontend
 ```
 
-### Testing
+### Building
+
+```bash
+# Build all projects
+make build-all
+
+# Build backend only
+make build-backend
+
+# Build frontend only
+make build-frontend
+
+# Build infrastructure only
+make build-infra
+```
+
+### Testing & Quality Checks
 
 ```bash
 # Run all tests
@@ -83,8 +105,8 @@ make test-frontend
 # Run tests with coverage
 make test-coverage
 
-# Run all tests with coverage
-make test-with-coverage
+# Run TypeScript type checking
+make typecheck
 
 # Run linting
 make lint
@@ -92,8 +114,27 @@ make lint
 # Run linting with auto-fix
 make lint-fix
 
-# Run pre-commit checks (tests + coverage + linting)
+# Run pre-commit checks (typescript, lint, tests, coverage)
 make pre-commit-check
+```
+
+### Dependency Management
+
+```bash
+# Clean and reinstall all dependencies
+make clean-install
+
+# Install all dependencies
+make install-all
+
+# Check for outdated dependencies
+make deps-check
+
+# Update dependencies safely
+make deps-update
+
+# Audit dependencies for vulnerabilities
+make deps-audit
 ```
 
 ## Deployment
@@ -102,15 +143,40 @@ make pre-commit-check
 
 - AWS account
 - GitHub repository with OIDC configured for AWS
+- Node.js 22+ and npm 10.8.0+
+- AWS CLI configured with appropriate credentials
 
-### Deploying to AWS
-
-The application is automatically deployed to AWS when changes are pushed to the main branch, using GitHub Actions.
-
-For manual deployment:
+### Infrastructure Management
 
 ```bash
+# Deploy all infrastructure and applications to AWS
 make deploy
+
+# Synthesize CloudFormation templates
+make cdk-synth
+
+# Check infrastructure changes before deploying
+make cdk-diff
+```
+
+### CI/CD Pipeline
+
+The application is automatically deployed to AWS when changes are pushed to the main branch using GitHub Actions with the following checks:
+
+1. TypeScript compilation checks
+2. Linting verification
+3. Test execution with 100% coverage requirement
+4. Pre-commit validation
+5. Infrastructure deployment
+
+### Maintenance
+
+```bash
+# Clean build artifacts and generated files
+make clean
+
+# View all available commands
+make help
 ```
 
 ## Architecture

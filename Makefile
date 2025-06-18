@@ -1,94 +1,151 @@
-.PHONY: setup dev docker backend frontend frontend-dev frontend-serve test test-backend test-frontend test-coverage test-with-coverage lint lint-fix pre-commit-check prepare deploy clean check-deps update-deps audit
+.PHONY: setup dev docker backend frontend test test-backend test-frontend test-coverage lint lint-fix pre-commit-check typecheck deploy clean clean-install install-all
 
+# Project setup and dependency management
 setup:
-	@echo "Setting up project dependencies..."
+	@echo "🔧 Setting up project dependencies..."
 	cd backend && npm install
 	cd frontend && npm install
 	cd infra && npm install
 
+clean-install:
+	@echo "🧹 Cleaning all dependencies and performing fresh install..."
+	npm run clean-install
+
+install-all:
+	@echo "📦 Installing all dependencies and verifying integrity..."
+	npm run install-all
+
+# Development environments
 dev:
-	@echo "Starting development environment..."
+	@echo "🚀 Starting development environment with Docker..."
 	docker-compose up
 
 docker:
-	@echo "Starting Docker with bake optimization..."
+	@echo "🐳 Starting Docker with bake optimization..."
 	COMPOSE_BAKE=true docker compose up
 
 backend:
-	@echo "Starting backend..."
+	@echo "⚙️ Starting backend server..."
 	cd backend && npm run dev
 
-frontend-dev:
-	@echo "Starting frontend development server..."
+frontend:
+	@echo "🎨 Starting frontend development server..."
 	cd frontend && npm run dev
 
-frontend-serve:
-	@echo "Serving frontend static files..."
+start-frontend:
+	@echo "🖥️ Starting frontend production server..."
+	cd frontend && npm run start
+
+serve-frontend:
+	@echo "🌐 Serving frontend static files..."
 	cd frontend && npm run serve
 
-frontend: frontend-dev
-
+# Testing commands
 test:
-	@echo "Running all tests..."
-	npm run test
+	@echo "🧪 Running all tests..."
+	npm test
 
 test-backend:
-	@echo "Running backend tests..."
+	@echo "🧪 Running backend tests..."
 	npm run test-backend
 
 test-frontend:
-	@echo "Running frontend tests..."
+	@echo "🧪 Running frontend tests..."
 	npm run test-frontend
 
 test-coverage:
-	@echo "Running backend tests with coverage..."
+	@echo "🧪 Running backend tests with coverage..."
 	npm run test-coverage
 
-test-with-coverage:
-	@echo "Running all tests with coverage..."
-	make test-coverage
-	make test-frontend
-
-pre-commit-check:
-	@echo "Running pre-commit checks..."
-	npm run pre-commit-check
+# Code quality commands
+typecheck:
+	@echo "🔍 Running TypeScript checks across all projects..."
+	npm run typecheck
 
 lint:
-	@echo "Linting code..."
+	@echo "🔎 Running linters across all projects..."
 	npm run lint
 
 lint-fix:
-	@echo "Linting and fixing code..."
+	@echo "🔎 Linting code with auto-fix..."
 	npm run lint-fix
 
-prepare:
-	@echo "Preparing git hooks..."
-	npm run prepare
+pre-commit-check:
+	@echo "✅ Running pre-commit checks (typescript, lint, tests, coverage)..."
+	npm run pre-commit-check
+
+# Building and deployment commands
+build-backend:
+	@echo "🏗️ Building backend..."
+	cd backend && npm run build
+
+build-frontend:
+	@echo "🏗️ Building frontend..."
+	cd frontend && npm run build
+
+build-infra:
+	@echo "🏗️ Building infrastructure code..."
+	cd infra && npm run build
+
+build-all: build-backend build-frontend build-infra
+	@echo "🏗️ All projects built successfully"
 
 deploy:
-	@echo "Deploying to AWS..."
+	@echo "🚀 Deploying infrastructure and applications..."
 	cd infra && npm run deploy
 
+# CDK infrastructure commands
+cdk-synth:
+	@echo "📝 Synthesizing CloudFormation templates..."
+	cd infra && npm run synth
+
+cdk-diff:
+	@echo "🔄 Checking infrastructure changes..."
+	cd infra && npm run diff
+
+# Cleanup commands
 clean:
-	@echo "Cleaning build artifacts..."
-	rm -rf backend/dist
-	rm -rf frontend/build
+	@echo "🧹 Cleaning generated files and build artifacts..."
+	find . -name "dist" -type d -prune -exec rm -rf '{}' +
+	find . -name ".next" -type d -prune -exec rm -rf '{}' +
+	find . -name "coverage" -type d -prune -exec rm -rf '{}' +
+	find . -name "cdk.out" -type d -prune -exec rm -rf '{}' +
 	rm -rf infra/cdk.out
 
-check-deps:
-	@echo "Checking dependencies..."
-	./scripts/check-dependencies.sh
-
-update-deps:
-	@echo "Updating minor/patch dependencies..."
-	cd backend && ncu --target minor -u && npm install
-	cd frontend && ncu --target minor -u && npm install
-	cd infra && ncu --target minor -u && npm install
-	@echo "Running tests after updates..."
-	make test
-
-audit:
-	@echo "Running security audit..."
-	cd backend && npm audit
-	cd frontend && npm audit 
-	cd infra && npm audit
+# Documentation for commands
+help:
+	@echo "📚 Setlista Project Commands"
+	@echo ""
+	@echo "Development Commands:"
+	@echo "  make setup           - Install dependencies in each folder"
+	@echo "  make clean-install   - Clean and reinstall all dependencies"
+	@echo "  make install-all     - Install all dependencies and verify integrity"
+	@echo "  make dev             - Start full stack with Docker"
+	@echo "  make backend         - Start backend server only"
+	@echo "  make frontend        - Start frontend dev server only"
+	@echo ""
+	@echo "Building Commands:"
+	@echo "  make build-all       - Build backend, frontend and infra"
+	@echo "  make build-backend   - Build backend only"
+	@echo "  make build-frontend  - Build frontend only"
+	@echo ""
+	@echo "Testing and Quality Commands:"
+	@echo "  make test            - Run all tests"
+	@echo "  make test-backend    - Run backend tests"
+	@echo "  make test-frontend   - Run frontend tests"
+	@echo "  make test-coverage   - Run tests with coverage"
+	@echo "  make lint            - Run linters"
+	@echo "  make lint-fix        - Run linters with auto-fix"
+	@echo "  make typecheck       - Run TypeScript checks"
+	@echo "  make pre-commit-check - Run pre-commit validation"
+	@echo ""
+	@echo "Deployment Commands:"
+	@echo "  make deploy          - Deploy all infrastructure and apps"
+	@echo "  make cdk-synth       - Synthesize CloudFormation templates"
+	@echo "  make cdk-diff        - Show infrastructure changes"
+	@echo ""
+	@echo "Maintenance Commands:"
+	@echo "  make clean           - Remove build artifacts"
+	@echo "  make deps-check      - Check outdated dependencies"
+	@echo "  make deps-audit      - Audit dependencies for vulnerabilities"
+	@echo "  make deps-update     - Update dependencies safely"
