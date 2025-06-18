@@ -42,7 +42,12 @@ export const createApp = () => {
 
   logger.debug('Creating /health route');
   app.get('/health', (_, res) => {
-    res.json({ status: 'ok', env: {...process.env}, timestamp: new Date().toISOString()});
+    res.json({ 
+      status: 'ok', 
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
   });
 
   logger.debug('Setting up error handler');

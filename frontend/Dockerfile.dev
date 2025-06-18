@@ -1,18 +1,29 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
+# Install global dependencies required for development
+RUN npm install -g npm@latest
+
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies and ensure Next.js binary is available
-RUN npm install
+# Install dependencies with legacy peer deps to handle Next.js requirements
+RUN npm install --legacy-peer-deps && npm cache clean --force
 
+# Copy application code
 COPY . .
 
-# Build the application for production use
-RUN npm run build
+# Ensure node_modules/.bin is in PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# Set environment for Next.js
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV development
+# Set flag for Docker environment
+ENV IN_DOCKER=true
 
 EXPOSE 3000
 
-# For Docker Compose use 'start', which requires a build
-CMD ["npm", "run", "dev"]
+# Start in development mode - standard mode in Docker
+CMD ["npx", "next", "dev"]

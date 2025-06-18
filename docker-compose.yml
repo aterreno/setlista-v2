@@ -13,6 +13,13 @@ services:
       - PORT=3001
     env_file:
       - ./backend/.env
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
 
   frontend:
     build:
@@ -25,9 +32,10 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://backend:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      backend:
+        condition: service_healthy
     env_file:
       - ./frontend/.env
-    command: ["npm", "run", "dev"]
-    depends_on:
-      - backend
+    restart: unless-stopped
