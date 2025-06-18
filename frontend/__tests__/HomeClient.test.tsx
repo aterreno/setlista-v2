@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react'
 import React from 'react'
-import { useAuth } from '../hooks/useAuth'
 import '@testing-library/jest-dom'
 import HomeClient from '../components/HomeClient'
 
@@ -16,6 +15,7 @@ const mockLogin = jest.fn();
 const mockLogout = jest.fn();
 const mockUseAuth = jest.fn();
 
+// Important: Define mock module before importing the module that uses it
 jest.mock('../hooks/useAuth', () => ({
   useAuth: () => mockUseAuth()
 }))
@@ -97,12 +97,8 @@ describe('HomeClient', () => {
     
     // Check that main content elements are rendered
     expect(screen.getByText(/Find setlists for your/i)).toBeInTheDocument()
-    
-    // Use getAllByText since there are multiple matches for this text
-    const favoriteArtistsElements = screen.getAllByText(/favorite artists/i);
-    expect(favoriteArtistsElements.length).toBeGreaterThan(0);
-    
-    expect(screen.getByPlaceholderText(/search for an artist/i)).toBeInTheDocument()
+    expect(screen.getByText(/favorite artists/i, { selector: 'span' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Search for an artist/i)).toBeInTheDocument()
   })
   
   it('renders the home page correctly when authenticated', () => {
@@ -121,16 +117,15 @@ describe('HomeClient', () => {
   })
   
   it('redirects to setlist page when pendingSetlistId exists in session storage', () => {
-    // Set up the session storage to have a pendingSetlistId
-    sessionStorageMock['pendingSetlistId'] = '12345'
-    
     // Set up auth state
-    const authState: AuthState = {
-      accessToken: null,
-      expiresAt: null, 
-      isAuthenticated: false
-    }
-    mockUseAuth.mockReturnValue([authState, mockLogin, mockLogout])
+    mockUseAuth.mockReturnValue([
+      { accessToken: null, expiresAt: null, isAuthenticated: false },
+      jest.fn(),
+      jest.fn()
+    ])
+    
+    // Mock session storage with a pending setlist ID
+    sessionStorageMock['pendingSetlistId'] = '12345'
     
     render(<HomeClient />)
     
@@ -142,16 +137,15 @@ describe('HomeClient', () => {
   })
   
   it('redirects to search page when authenticated and saved search exists', () => {
-    // Set up local storage
-    localStorageMock['setlista_search'] = 'radiohead'
-    
     // Set up authenticated state
-    const authState: AuthState = {
-      accessToken: 'fake-token',
-      expiresAt: Date.now() + 3600000, 
-      isAuthenticated: true
-    }
-    mockUseAuth.mockReturnValue([authState, mockLogin, mockLogout])
+    mockUseAuth.mockReturnValue([
+      { accessToken: 'fake-token', expiresAt: Date.now() + 3600000, isAuthenticated: true },
+      jest.fn(),
+      jest.fn()
+    ])
+    
+    // Mock localStorage with a saved search
+    localStorageMock['setlista_search'] = 'radiohead'
     
     render(<HomeClient />)
     
@@ -164,12 +158,11 @@ describe('HomeClient', () => {
   
   it('handles errors during storage access properly', () => {
     // Set up auth state
-    const authState: AuthState = {
-      accessToken: null, 
-      expiresAt: null, 
-      isAuthenticated: false
-    }
-    mockUseAuth.mockReturnValue([authState, mockLogin, mockLogout])
+    mockUseAuth.mockReturnValue([
+      { accessToken: null, expiresAt: null, isAuthenticated: false },
+      jest.fn(),
+      jest.fn()
+    ])
     
     // Force an error when accessing storage
     jest.spyOn(window.sessionStorage, 'getItem').mockImplementation(() => {

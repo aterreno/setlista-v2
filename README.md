@@ -11,17 +11,17 @@ A full-stack web application that allows users to search for artists on Setlist.
 
 ## Tech Stack
 
-- **Backend**: TypeScript, Node.js, Express
-- **Frontend**: React, TypeScript
+- **Backend**: TypeScript, Node.js v22, Express
+- **Frontend**: React 18, Next.js 14, TypeScript
 - **Infrastructure**: AWS CDK (CloudFront, S3, Lambda, API Gateway)
-- **Testing**: Jest, React Testing Library, Cypress
+- **Testing**: Jest, React Testing Library
 - **CI/CD**: GitHub Actions
 
 ## Local Development
 
 ### Prerequisites
 
-- Node.js (v18+)
+- Node.js (v22+)
 - Docker
 - AWS CLI (for deployment)
 - Setlist.fm API key
@@ -50,7 +50,7 @@ A full-stack web application that allows users to search for artists on Setlist.
    ```
    
    **Option C: Manual installation**
-   - Install Node.js 18.20.5 and npm 10.9.2+ manually
+   - Install Node.js 22+ and npm 10.9.2+ manually
 
 3. Create a `.env` file in both the `backend` and `frontend` directories (see `.env.example`)
 4. Run `make setup` to install dependencies
@@ -102,7 +102,7 @@ make test-backend
 # Run frontend tests
 make test-frontend
 
-# Run tests with coverage
+# Run tests with coverage (required to be 100%)
 make test-coverage
 
 # Run TypeScript type checking
@@ -143,7 +143,7 @@ make deps-audit
 
 - AWS account
 - GitHub repository with OIDC configured for AWS
-- Node.js 22+ and npm 10.8.0+
+- Node.js 22+ and npm 10.9.2+
 - AWS CLI configured with appropriate credentials
 
 ### Infrastructure Management
@@ -183,7 +183,7 @@ make help
 
 The application follows clean architecture principles:
 
-- **Frontend**: React application hosted on S3 + CloudFront
+- **Frontend**: React/Next.js application hosted on S3 + CloudFront
 - **Backend**: Node.js APIs deployed as Lambda functions behind API Gateway
 - **Security**: Secrets stored in AWS Secrets Manager, HTTPS enforced, OAuth for authentication
 

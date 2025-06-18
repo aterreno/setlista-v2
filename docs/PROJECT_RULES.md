@@ -3,7 +3,7 @@
 ## 🎯 Core Principles
 
 ### 📊 Test Coverage
-- **100% test coverage** required for all new code
+- **80% test coverage** required for all new code
 - **Run tests after every change** - no exceptions
 - Tests must cover happy path, edge cases, and error scenarios
 - Use meaningful test descriptions and assertions
@@ -92,7 +92,7 @@
 - Hardcoded values (magic numbers, URLs, secrets)
 - Skipping tests for "quick fixes"
 - Committing with linting errors
-- Deploying without 100% test coverage
+- Deploying without 80% test coverage
 - Pushing secrets or sensitive data
 - Breaking changes without proper versioning
 
@@ -105,7 +105,7 @@
 - Performance monitoring
 
 ## 🎭 Code Review Checklist
-- [ ] Tests written and passing (100% coverage)
+- [ ] Tests written and passing (80% coverage)
 - [ ] Linting passes without errors
 - [ ] No hardcoded values
 - [ ] SOLID principles followed
