@@ -2,17 +2,21 @@
   "name": "setlista",
   "version": "1.0.0",
   "description": "A full-stack web application that allows users to search for artists on Setlist.fm, view their recent concerts, and create Spotify playlists from setlists.",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "npm run test-backend && npm run test-frontend",
     "test-backend": "cd backend && npm test",
     "test-frontend": "cd frontend && npm test -- --watchAll=false",
     "test-coverage": "cd backend && npm run test:coverage",
     "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
-    "lint-fix": "cd backend && npm run lint -- --fix && cd ../frontend && npm run lint -- --fix",
+    "lint-fix": "cd backend && npm run lint -- --fix && cd ../frontend && npm run lint-fix",
     "prepare": "husky",
     "pre-commit-check": "npm run typecheck && npm run lint && npm run test && npm run test-coverage",
-    "typecheck": "cd backend && npx tsc --noEmit && cd ../frontend && npx tsc --noEmit && cd ../infra && npx tsc --noEmit"
+    "typecheck": "cd backend && npx tsc --noEmit && cd ../frontend && npx tsc --noEmit && cd ../infra && npx tsc --noEmit",
+    "setup-npmrc": "echo 'engine-strict=true' > .npmrc",
+    "install-all": "npm run setup-npmrc && npm install && npm run ci-verify",
+    "clean-install": "rm -rf node_modules frontend/node_modules backend/node_modules infra/node_modules package-lock.json frontend/package-lock.json backend/package-lock.json infra/package-lock.json && npm run install-all",
+    "ci-verify": "npm run typecheck"
   },
   "repository": {
     "type": "git",
@@ -30,7 +34,6 @@
   },
   "engines": {
     "node": ">=22.0.0",
-    "node": ">=18.20.5",
-    "npm": ">=10.9.2"
+    "npm": ">=10.8.0"
   }
 }
