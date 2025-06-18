@@ -3,7 +3,6 @@
 - add dev environment: it would break so many things with this code
     [local/npm, docker, dev, prod]
 - add end to end tests to promote dev to prod, i.e. search for an artist with end2end search and spotify login working fine
-- Improve test coverage (add tests for frontend)
 
 # NRFRs todos:
 - add sentry
