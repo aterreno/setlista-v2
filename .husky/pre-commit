@@ -4,6 +4,54 @@ echo "🔍 Running pre-commit checks..."
 # Ensure node_modules/.bin is in PATH
 export PATH="$(pwd)/node_modules/.bin:$(pwd)/backend/node_modules/.bin:$(pwd)/frontend/node_modules/.bin:$PATH"
 
+# Dependency validation check
+echo "📦 Validating dependency integrity..."
+
+# Check if package-lock.json files exist and match package.json
+FAILED=false
+
+# Function to check dependency integrity
+check_dependency_integrity() {
+  local dir=$1
+  echo "  Checking $dir dependencies..."
+  
+  # Check if package-lock.json exists
+  if [ ! -f "$dir/package-lock.json" ]; then
+    echo "❌ $dir/package-lock.json is missing. Run 'npm install' in $dir directory."
+    FAILED=true
+    return
+  fi
+  
+  # Verify no merge conflicts in package-lock.json
+  if grep -q "<<<<<<< HEAD" "$dir/package-lock.json"; then
+    echo "❌ $dir/package-lock.json has merge conflicts. Please resolve them before committing."
+    FAILED=true
+    return
+  fi
+  
+  # Verify package-lock is in sync with package.json
+  pushd $dir > /dev/null
+  npm ls --json --depth=0 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "❌ $dir package-lock.json is out of sync with package.json. Run 'npm install' to fix."
+    FAILED=true
+  else
+    echo "  ✅ $dir dependencies look good!"
+  fi
+  popd > /dev/null
+}
+
+# Check each folder's dependencies
+check_dependency_integrity "."
+check_dependency_integrity "backend"
+check_dependency_integrity "frontend"
+check_dependency_integrity "infra"
+
+if [ "$FAILED" = true ]; then
+  echo "❌ Dependency validation failed. Please fix the issues above before committing."
+  exit 1
+fi
+
 # Find the right npx to use
 if command -v npx &> /dev/null; then
     NPX_CMD="npx"
