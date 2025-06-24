@@ -170,8 +170,8 @@ function ArtistSearchInner() {
       // Pass the access token from auth state as required by the API
       const response = await createSpotifyPlaylist(setlistId, authState.accessToken);
       
-      if (response.playlistUrl) {
-        setPlaylistUrls(prev => ({ ...prev, [setlistId]: response.playlistUrl }));
+      if (response.playlist?.external_urls?.spotify) {
+        setPlaylistUrls(prev => ({ ...prev, [setlistId]: response.playlist.external_urls.spotify }));
         toast({
           title: "Playlist Created",
           description: "Spotify playlist has been created successfully!",
